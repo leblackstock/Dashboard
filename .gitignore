@@ -1,0 +1,43 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node/frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.tsbuildinfo
+
+# Local dashboard data
+data/*.db
+data/**/*.db
+data/*.sqlite
+data/**/*.sqlite
+data/raw/
+data/debug/
+data/sanitized/codex/*.json
+!data/sanitized/codex/.gitkeep
+
+# Logs and captures
+logs/
+*.log
+*.har
+*.trace
+*.payload
+*.capture
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

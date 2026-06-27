@@ -1,0 +1,18 @@
+{
+  "plan_type": "plus",
+  "reset_credits_available": 2,
+  "quotas": [
+    {
+      "window_minutes": 300,
+      "used_percent": 34.5,
+      "remaining_percent": 65.5,
+      "reset_at": "2026-06-27T18:00:00+00:00"
+    },
+    {
+      "window_minutes": 10080,
+      "used_percent": 12,
+      "remaining_percent": 88,
+      "reset_at": "2026-07-01T00:00:00+00:00"
+    }
+  ]
+}

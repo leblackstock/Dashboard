@@ -1,0 +1,18 @@
+title = "Dashboard Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Approved generated/local-only artifacts ignored by source control"
+paths = [
+  '''^\.venv[\\/]''',
+  '''^data[\\/].*\.(db|sqlite)$''',
+  '''^data[\\/]raw[\\/]''',
+  '''^data[\\/]debug[\\/]''',
+  '''^data[\\/]sanitized[\\/]codex[\\/].*\.json$''',
+  '''^frontend[\\/]dist[\\/]''',
+  '''^frontend[\\/]node_modules[\\/]''',
+  '''^frontend[\\/].*\.tsbuildinfo$''',
+  '''^logs[\\/]''',
+]

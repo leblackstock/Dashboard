@@ -1,0 +1,60 @@
+version: "3"
+
+tasks:
+  backend:sync:
+    desc: Install Python dependencies with uv
+    cmds:
+      - uv sync
+
+  db:init:
+    desc: Initialize the local SQLite database
+    cmds:
+      - uv run python -m backend.app.db --init
+
+  collector:codex:
+    desc: Run the Codex live usage collector manually
+    cmds:
+      - uv run python -m backend.collectors.collect_codex_live_usage
+
+  backend:dev:
+    desc: Start the FastAPI backend
+    cmds:
+      - uv run uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+
+  frontend:install:
+    desc: Install frontend dependencies with pnpm
+    dir: frontend
+    cmds:
+      - npx pnpm@9.15.9 install
+
+  frontend:dev:
+    desc: Start the frontend dev server
+    dir: frontend
+    cmds:
+      - npx pnpm@9.15.9 dev
+
+  frontend:build:
+    desc: Build the frontend
+    dir: frontend
+    cmds:
+      - npx pnpm@9.15.9 build
+
+  test:
+    desc: Run backend tests
+    cmds:
+      - uv run pytest
+
+  lint:
+    desc: Run Python lint checks
+    cmds:
+      - uv run ruff check .
+
+  format:
+    desc: Format Python code
+    cmds:
+      - uv run ruff format .
+
+  scan:secrets:
+    desc: Run a redacted local Gitleaks scan
+    cmds:
+      - gitleaks detect --source . --config .gitleaks.toml --no-git --redact
