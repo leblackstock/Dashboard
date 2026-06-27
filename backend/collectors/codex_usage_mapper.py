@@ -81,6 +81,10 @@ def _int_or_none(value: Any) -> int | None:
     return int(number)
 
 
+def _iso_from_unix_timestamp(value: int | float) -> str:
+    return datetime.fromtimestamp(value, UTC).replace(microsecond=0).isoformat()
+
+
 def _percent_pair(item: dict[str, Any]) -> tuple[float | None, float | None]:
     used = _number(
         _first_direct(
@@ -135,7 +139,7 @@ def _window_token(item: dict[str, Any]) -> str:
 
 
 def _window_minutes(item: dict[str, Any]) -> int | None:
-    value = _first_direct(
+    minute_value = _first_direct(
         item,
         (
             "window_minutes",
@@ -146,7 +150,27 @@ def _window_minutes(item: dict[str, Any]) -> int | None:
             "periodMinutes",
         ),
     )
-    return _int_or_none(value)
+    minutes = _int_or_none(minute_value)
+    if minutes is not None:
+        return minutes
+
+    second_value = _first_direct(
+        item,
+        (
+            "window_seconds",
+            "windowSeconds",
+            "limit_window_seconds",
+            "limitWindowSeconds",
+            "duration_seconds",
+            "durationSeconds",
+            "period_seconds",
+            "periodSeconds",
+        ),
+    )
+    seconds = _int_or_none(second_value)
+    if seconds is None:
+        return None
+    return int(seconds / 60)
 
 
 def _find_window(
@@ -178,6 +202,8 @@ def _reset_at(item: dict[str, Any] | None) -> str | None:
             "nextResetAt",
         ),
     )
+    if isinstance(value, int | float):
+        return _iso_from_unix_timestamp(value)
     return str(value) if value is not None else None
 
 
@@ -218,6 +244,8 @@ def map_codex_usage_payload(
                     "resetCreditsAvailable",
                     "resets_available",
                     "resetsAvailable",
+                    "available_count",
+                    "availableCount",
                 ),
             )
         ),

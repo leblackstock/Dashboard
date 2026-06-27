@@ -14,14 +14,14 @@ function freshnessTone(freshness: string) {
 }
 
 function formatPercent(value: number | null) {
-  if (value == null) return "—";
+  if (value == null) return "Unavailable";
   return `${Math.round(value)}%`;
 }
 
 function formatDate(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "Unavailable";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "Unavailable";
   return new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
@@ -31,9 +31,9 @@ function formatDate(value: string | null) {
 }
 
 function formatCountdown(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "Unavailable";
   const resetAt = new Date(value).getTime();
-  if (Number.isNaN(resetAt)) return "—";
+  if (Number.isNaN(resetAt)) return "Unavailable";
   const diffMs = resetAt - Date.now();
   if (diffMs <= 0) return "Ready";
   const totalMinutes = Math.ceil(diffMs / 60_000);
@@ -45,16 +45,21 @@ function formatCountdown(value: string | null) {
 }
 
 function UsageWindow({ label, quota }: { label: string; quota: QuotaWindow }) {
+  const remainingLabel =
+    quota.remaining_percent == null ? "Unavailable" : `${formatPercent(quota.remaining_percent)} left`;
+  const usedLabel =
+    quota.used_percent == null ? "Used unavailable" : `${formatPercent(quota.used_percent)} used`;
+  const resetLabel = formatCountdown(quota.reset_at);
   return (
     <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-ink">{label}</span>
-        <span className="text-sm text-muted">{formatPercent(quota.remaining_percent)} left</span>
+        <span className="text-sm text-muted">{remainingLabel}</span>
       </div>
       <Progress value={quota.used_percent} />
       <div className="flex items-center justify-between gap-3 text-xs text-muted">
-        <span>{formatPercent(quota.used_percent)} used</span>
-        <span>Reset {formatCountdown(quota.reset_at)}</span>
+        <span>{usedLabel}</span>
+        <span>Reset {resetLabel}</span>
       </div>
     </div>
   );
@@ -88,7 +93,7 @@ function AccountUsage({ account }: { account: CodexUsageAccount }) {
             <span className="text-xs">Reset credits</span>
           </div>
           <p className="mt-2 text-lg font-semibold text-ink">
-            {account.reset_credits_available ?? "—"}
+            {account.reset_credits_available ?? "Unavailable"}
           </p>
         </div>
         <div className="rounded-lg border border-line bg-surface p-4">
