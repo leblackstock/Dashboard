@@ -1,6 +1,13 @@
-# Dashboard Phase 1 Runbook
+# Dashboard Runbook
 
-Current approved master spec: `dashboard_master_spec_v4.41.md`.
+Current approved master spec: `dashboard_master_spec_v4.46.md`.
+
+Published Phase 1 checkpoint:
+
+- Repo: `https://github.com/leblackstock/Dashboard`
+- Branch: `main`
+- Tag: `phase1-codex-usage-v0.1.0`
+- Commit: `f377a6937cb9f781700c74bf024f302f292fb1e4`
 
 Phase 1 builds only this pipeline:
 
@@ -72,7 +79,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/ai/codex/live-usage
 task frontend:dev
 ```
 
-Open the local Vite URL shown by pnpm. The first screen is the Codex Usage card.
+Open the local Vite URL shown by pnpm. The first screen is the Daily dashboard. In Phase 1 it showed only the Codex Usage card; in Phase 2 it expands into `Daily Command Center v1`.
 
 ## Verification
 
@@ -106,4 +113,14 @@ Confirm that no tokens, cookies, authorization headers, auth file contents, raw 
 
 ## Startup Notes
 
-Phase 1 may use Windows Task Scheduler for the backend only after manual backend startup works. Do not add a scheduled collector until the manual collector is proven safe.
+Phase 1 may use Windows Task Scheduler for the backend only after manual backend startup works. Do not add a scheduled collector until the manual collector is proven safe and explicitly approved.
+
+## Phase 2
+
+Phase 2 implementation is approved. See `docs/phase2_implementation_plan.md`.
+
+Phase 2 keeps the Codex collector manual and adds a local-first Daily dashboard with Codex Usage, Today’s Top 3, Active Projects, Blocked / Needs Review, Quick Capture, and Collector Health.
+
+Today’s Top 3 shows all non-completed items, also shows items completed today collapsed/faded, and hides items completed before today by default. Phase 2 does not add calendar or recurrence behavior.
+
+Quick Capture stores only user-entered local note/capture text. It must not ingest raw logs, raw endpoint payloads, prompt history, auth files, rollout files, or pasted secret dumps.

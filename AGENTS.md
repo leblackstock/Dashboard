@@ -1,22 +1,40 @@
 # Dashboard Agent Instructions
 
-Current approved master spec: `dashboard_master_spec_v4.41.md`.
+Current approved master spec: `dashboard_master_spec_v4.46.md`.
 
-If the root spec and `docs/dashboard_master_spec_v4.41.md` ever differ, use the newest approved master spec as authoritative.
+If the root spec and `docs/dashboard_master_spec_v4.46.md` ever differ, use the newest approved master spec as authoritative.
 
-## Phase 1 Scope Lock
+## Current Status
 
-Implement Phase 1 only:
+Phase 1 is complete, pushed, and tagged:
 
-- Codex live usage collector.
-- Sanitized JSON snapshot.
-- SQLite row.
-- FastAPI endpoint.
-- One frontend Codex Usage card.
-- Startup/run support.
-- Quick docs/runbook.
+- Repo: `https://github.com/leblackstock/Dashboard`
+- Branch: `main`
+- Tag: `phase1-codex-usage-v0.1.0`
+- Commit: `f377a6937cb9f781700c74bf024f302f292fb1e4`
 
-Do not add Phase 2 cards, project registry UI, draggable grids, scheduled collectors, other AI collectors, recommendations, notifications, calendar/email integrations, cloud deployment, external auth, MCP tools, token proxy tools, autonomous memory, or a new database without explicit approval.
+Phase 2 implementation is approved with the scope below.
+
+## Phase 2 Scope Lock
+
+Implement Phase 2 only:
+
+- Daily Command Center v1.
+- Existing Codex Usage card carried forward.
+- Today’s Top 3, Active Projects, Blocked / Needs Review, Quick Capture, and Collector Health cards.
+- Project Registry v1.
+- Basic dark/glow frontend polish.
+
+Do not add Claude/ChatGPT collectors, best-AI-tool recommendations, Weekly/Monthly dashboards, draggable/resizable grids, calendar/email integrations, notifications, mobile/PWA polish, external hosting, multi-user auth, a scheduler/background collector, MCP tools, token proxy tools, autonomous memory, or a new database without explicit approval.
+
+## Phase 2 Clarifications
+
+- Today’s Top 3 shows all non-completed items.
+- Today’s Top 3 also shows items completed today, collapsed/faded.
+- Today’s Top 3 hides items completed before today by default.
+- Do not add calendar/recurrence behavior in Phase 2.
+- Quick Capture raw text means user-entered local note/capture text only.
+- Quick Capture must not become an import path for raw logs, raw endpoint payloads, prompt history, auth files, rollout files, or pasted secret dumps.
 
 ## Security Rules
 

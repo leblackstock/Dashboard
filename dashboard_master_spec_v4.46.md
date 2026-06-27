@@ -1,7 +1,7 @@
-# Dashboard Master Spec v4.41
+# Dashboard Master Spec v4.46
 
 Created: 2026-06-26
-Previous version: v4.40
+Previous version: v4.45
 
 ## Core Concept
 
@@ -1481,7 +1481,7 @@ dashboard/
     scan_repos/
   src/
   docs/
-    dashboard_master_spec_v4.41.md
+    dashboard_master_spec_v4.46.md
 ```
 
 ## Example AI Subscription Limits JSON
@@ -1595,7 +1595,7 @@ dashboard/
     raw/
     sanitized/
   docs/
-    dashboard_master_spec_v4.41.md
+    dashboard_master_spec_v4.46.md
 ```
 
 First collector:
@@ -2595,7 +2595,7 @@ dashboard/
     sanitized/
       codex/
   docs/
-    dashboard_master_spec_v4.41.md
+    dashboard_master_spec_v4.46.md
 ```
 
 Rules:
@@ -3067,6 +3067,51 @@ Phase 1 is accepted when:
 After acceptance, move to the Phase 1 → Phase 2 Gate Questions before starting Phase 2.
 
 
+## Phase 1 Published Checkpoint
+
+Phase 1 has been pushed and tagged on GitHub.
+
+Repository:
+
+```txt
+https://github.com/leblackstock/Dashboard
+```
+
+Remote:
+
+```txt
+https://github.com/leblackstock/Dashboard.git
+```
+
+Published branch:
+- `main`
+
+Published tag:
+- `phase1-codex-usage-v0.1.0`
+
+Final commit on `main`:
+
+```txt
+f377a6937cb9f781700c74bf024f302f292fb1e4
+```
+
+Tag target hash:
+
+```txt
+f377a6937cb9f781700c74bf024f302f292fb1e4
+```
+
+Final status:
+- local `main`, `origin/main`, and `phase1-codex-usage-v0.1.0` all point to the same approved v4.41 commit.
+- working tree was clean.
+- Phase 1 is now a stable checkpoint.
+
+Next step:
+- Run the Phase 1 → Phase 2 Gate Questions.
+- Then ask Codex for a Phase 2 implementation plan.
+- Do not begin Phase 2 coding until the Phase 2 plan is approved.
+
+
 ## Phase 1 → Phase 2 Gate Questions
 
 When Phase 1 is complete, ask these questions before starting Phase 2. These are not meant to reopen the whole spec; they are a short gate check to decide how Phase 2 should be built.
@@ -3199,6 +3244,372 @@ Start Phase 2 only when:
 - Daily card order is chosen.
 - Manual-vs-automated inputs are agreed.
 - The Phase 2 stop point is clear.
+
+
+## Phase 2 / Phase 3 Planning Process and Skill Strategy
+
+Purpose:
+Before Phase 2 or Phase 3 coding starts, Codex should create a phase-specific implementation plan and review whether additional targeted skills are useful. Do not assume Phase 1 skills are enough for later phases.
+
+### Phase Planning Process
+
+Each new phase should follow this process:
+
+1. Confirm previous phase checkpoint
+   - confirm latest Git tag/commit
+   - confirm working tree is clean
+   - confirm tests/lint/build/secret scan status
+   - confirm no generated artifacts are tracked
+
+2. Run the phase gate questions
+   - answer only the decisions needed for the next phase
+   - do not reopen the full master spec
+   - keep unresolved future-phase items out of the implementation scope
+
+3. Ask Codex for a phase implementation plan
+   - no coding yet
+   - include scope, non-goals, data model, API, UI, tests, safety checks, and file list
+   - identify any new skills/tools/references needed
+
+4. Review skill/tool additions
+   - allow targeted skills only
+   - reject large templates and scope-expanding frameworks
+   - avoid overlapping skills that give conflicting instructions
+   - get approval before adding new major packages or services
+
+5. Implement in narrow slices
+   - one card/table/API group at a time
+   - keep each slice testable
+   - update docs/handoff after each slice
+
+6. Run acceptance gate
+   - tests
+   - lint
+   - build
+   - secret scan
+   - gitignore/artifact check
+   - safety audit
+   - manual run verification
+
+7. Commit/tag the phase checkpoint
+   - tag only after a clean acceptance gate
+   - update handoff and decisions docs
+
+### Phase 2 Skill Needs
+
+Phase 2 target:
+
+```txt
+Daily Command Center v1
+```
+
+Additional skills to consider for Phase 2:
+
+1. Product/UI planning skill
+   - helps keep the Daily dashboard useful instead of cluttered
+   - should define card priority and information density
+
+2. React state/data-fetching skill
+   - TanStack Query usage
+   - stale/fresh indicators
+   - simple optimistic/manual updates if needed
+
+3. SQLite CRUD/API skill
+   - project registry
+   - quick capture
+   - Top 3
+   - collector health
+   - safe migration/schema updates
+
+4. Form design skill
+   - Quick Capture
+   - Today’s Top 3
+   - manual project/status edits
+   - should keep forms fast and low-friction
+
+5. UI component/card design skill
+   - card hierarchy
+   - dark mode
+   - badges
+   - empty states
+   - loading/error states
+   - basic responsive behavior
+
+6. Accessibility/basic UX review skill
+   - keyboard usability
+   - color contrast
+   - readable badges
+   - mobile-safe spacing even before full mobile polish
+
+7. Testing skill
+   - backend CRUD tests
+   - API tests
+   - frontend component tests for cards/forms
+   - no-secrets API response tests
+
+8. Data migration/change review skill
+   - ensure Phase 2 schema changes do not block Phase 3
+   - verify stable project keys and account keys
+
+Phase 2 skills to avoid:
+- recommendation/AI-scoring skill unless only planning for Phase 3
+- automation/scheduler skill unless explicitly approved
+- multi-page routing complexity unless needed
+- drag/drop dashboard-grid skill
+- external integrations
+
+### Phase 2 Process Additions
+
+Before Phase 2 coding, Codex should answer:
+
+- Is Project Registry v1 SQLite-only?
+- What are the initial project statuses and categories?
+- What exact fields are needed for Top 3?
+- What exact fields are needed for Quick Capture?
+- What exact fields are needed for Collector Health?
+- What API endpoints are needed?
+- Which cards are manual-first?
+- What is the minimum useful Daily layout?
+- What is the Phase 2 stop point?
+
+Recommended Phase 2 implementation slices:
+
+1. Schema/API foundation
+   - project registry
+   - top 3
+   - quick capture
+   - collector health
+
+2. Daily dashboard shell
+   - simple fixed layout
+   - carry forward existing Codex card
+
+3. Manual cards
+   - Today’s Top 3
+   - Active Projects
+   - Blocked / Needs Review
+   - Quick Capture
+
+4. Health/freshness
+   - Collector Health
+   - stale/fresh badges across cards
+
+5. Polish and acceptance
+   - dark/glow visual pass
+   - tests
+   - secret scan
+   - docs/handoff
+
+### Phase 3 Skill Needs
+
+Phase 3 target:
+
+```txt
+AI + Project Intelligence v1
+```
+
+Additional skills to consider for Phase 3:
+
+1. Recommendation-system planning skill
+   - transparent scoring
+   - score breakdowns
+   - missing-data handling
+   - confidence labels
+   - manual override
+
+2. Data modeling / analytics skill
+   - AI tool registry
+   - availability snapshots
+   - usefulness scores
+   - project activity signals
+   - historical charts
+
+3. Chart/dashboard analytics skill
+   - historical usage charts
+   - trend cards
+   - weekly summaries
+   - project momentum indicators
+
+4. Collector design skill
+   - scheduled Codex collector
+   - Codex historical aggregate collector
+   - Claude Code discovery
+   - safe source labeling
+   - collector health
+
+5. Safety/security review skill
+   - scheduled collection safety
+   - collector logs
+   - new provider sources
+   - no raw prompts/account pages/logs
+
+6. UX writing/explainability skill
+   - recommendation reason text
+   - confidence/missing-data explanations
+   - “why this tool?” card copy
+
+7. Evaluation/feedback skill
+   - usefulness/output-quality scoring
+   - task type taxonomy
+   - “would use again”
+   - feedback loop for recommendations
+
+8. Token/context-efficiency skill
+   - Phase 3 may require larger repo scans and more planning
+   - use targeted search and handoff summaries aggressively
+
+Phase 3 skills to avoid:
+- autonomous task-execution agents
+- external action skills
+- Slack/Discord/GitHub automation
+- calendar/email automation
+- public hosting/multi-user auth
+- complex notification frameworks
+- non-Codex browser scraping unless explicitly approved
+
+### Phase 3 Process Additions
+
+Before Phase 3 coding, Codex should answer:
+
+- Is Phase 2 Daily dashboard actually useful?
+- Which manual Phase 2 cards were painful enough to automate?
+- Should scheduled Codex collection be enabled?
+- Which AI tools should be added next?
+- What task type list should be used?
+- What usefulness/output-quality scale should be used?
+- What chart set should ship first?
+- Should Weekly Summary be a page or a card group?
+- What is the Phase 3 stop point?
+
+Recommended Phase 3 implementation slices:
+
+1. AI Tool Registry
+2. Usefulness/output-quality scoring
+3. Best AI Tool recommendation card
+4. Codex historical charts
+5. Scheduled Codex collector, if approved
+6. Project Health/Project Intelligence signals
+7. Weekly Summary v1
+8. Non-Codex safe source discovery
+
+### Phase-Specific Codex Prompt Pattern
+
+Use this pattern before each phase:
+
+```txt
+Use the latest master spec as current.
+
+Do not code yet.
+
+Create a phase-specific implementation plan for Phase X.
+
+Include:
+- current checkpoint and branch/tag status
+- scope and non-goals
+- required data model/schema changes
+- API endpoints
+- frontend components/cards
+- tests and safety checks
+- docs/runbook/handoff updates
+- skill/tool/reference recommendations
+- packages/tools that need approval
+- exact file list
+- implementation slices
+- acceptance gate
+
+Do not add new major packages, templates, schedulers, collectors, external integrations, or action-capable skills without approval.
+
+Wait for approval before coding.
+```
+
+### Default Rule
+
+For Phase 2 and Phase 3:
+Plan deeply enough to avoid rework, but implement narrowly enough that every slice can be tested and accepted.
+
+
+## Final Prep Before Phase 2 Plan
+
+Before asking Codex to create the Phase 2 implementation plan, lock these planning defaults so Codex does not reopen basic decisions.
+
+### Phase 2 Planning Defaults
+
+Use these defaults unless Lauren overrides them:
+
+- Phase 2 target: `Daily Command Center v1`
+- Project registry: SQLite table only
+- Daily layout: fixed card layout first
+- Card order:
+  1. Codex Usage
+  2. Today’s Top 3
+  3. Active Projects
+  4. Blocked / Needs Review
+  5. Quick Capture
+  6. Collector Health
+- Top 3 behavior:
+  - manual first
+  - carry forward until completed
+  - project optional
+  - completed items stay visible but collapsed/faded for the day
+- Project/task cards:
+  - manual first
+  - automation later
+- Quick Capture:
+  - save raw capture text
+  - classify later
+  - no AI auto-classification in Phase 2 unless explicitly approved
+- Collectors:
+  - keep Codex collector manual unless scheduled collection is explicitly approved
+  - no new provider collectors in Phase 2
+- UI:
+  - clean/simple first
+  - dark mode
+  - purple/violet/cobalt glow direction
+  - premium polish gradually
+- Phase 2 stop point:
+  - stop when Daily dashboard is useful
+  - do not continue into Phase 3 intelligence/recommendations
+
+### Phase 2 Planning Instructions For Codex
+
+Codex should not code yet.
+
+Codex should produce:
+- schema changes
+- API endpoint list
+- frontend component/card list
+- implementation slices
+- test plan
+- safety plan
+- file list
+- package/tool changes requiring approval
+- open questions, if any
+
+Codex should also verify:
+- Phase 1 tag/commit is the starting checkpoint
+- `main` is clean
+- Phase 1 tests/lint/build still pass or note that they need to be rerun before coding
+- Phase 2 changes do not break the Phase 3 prep requirements:
+  - stable `project_key`
+  - stable `account_key_hash`
+  - reusable collector health structure
+  - manual correction path
+  - clean APIs that can support later intelligence cards
+
+### Phase 2 Planning Non-Goals
+
+Do not include in Phase 2 plan unless explicitly approved:
+- Best AI Tool recommendation engine
+- AI usefulness/output-quality scoring UI
+- Claude/ChatGPT collectors
+- scheduled collectors
+- draggable/resizable grid
+- Weekly/Monthly pages
+- notifications
+- calendar/email integrations
+- external hosting
+- multi-user auth
+- MCP/token proxy/autonomous memory
 
 
 ## Phase 2 Plan
@@ -3404,6 +3815,562 @@ Option B: Markdown/JSON project files + SQLite index
 
 Recommended:
 Start with SQLite table plus optional exported Markdown later.
+
+
+## Phase 3 Expanded Planning Notes
+
+Phase 3 is worth planning one level deeper now, but not over-specifying. The goal is to make sure Phase 2 is built in a way that does not block Phase 3.
+
+Phase 3 should remain:
+
+```txt
+AI + Project Intelligence v1
+```
+
+The main architectural requirement is:
+Phase 2 data structures should support Phase 3 recommendations, scoring, history, and project intelligence without needing a rewrite.
+
+### Phase 3 Data Model Prep
+
+Phase 2 should avoid hardcoding cards as isolated features. Data should be stored in reusable tables that Phase 3 can build on.
+
+Likely Phase 3 tables:
+
+#### `ai_tools`
+
+Purpose:
+Track available AI tools and their metadata.
+
+Fields:
+- `provider`
+- `tool`
+- `display_name`
+- `default_model`
+- `supports_coding`
+- `supports_design`
+- `supports_long_context`
+- `supports_images`
+- `supports_files`
+- `supports_local_repo`
+- `is_active`
+- `notes`
+
+#### `ai_tool_accounts`
+
+Purpose:
+Separate multiple subscriptions/accounts.
+
+Fields:
+- `account_key_hash`
+- `provider`
+- `tool`
+- `account_label`
+- `account_name`
+- `plan_type`
+- `auth_mode`
+- `confidence`
+- `freshness`
+- `last_checked_at`
+
+#### `ai_tool_availability_snapshots`
+
+Purpose:
+Track current and historical availability/limits.
+
+Fields:
+- `provider`
+- `tool`
+- `account_key_hash`
+- `plan_type`
+- `limit_type`
+- `window_name`
+- `used_percent`
+- `remaining_percent`
+- `reset_at`
+- `reset_credits_available`
+- `confidence`
+- `freshness`
+- `source_label`
+- `collected_at`
+
+#### `ai_usefulness_scores`
+
+Purpose:
+Manual or semi-manual value/quality feedback.
+
+Fields:
+- `provider`
+- `tool`
+- `model`
+- `account_key_hash`
+- `project_key`
+- `task_type`
+- `usefulness_score`
+- `output_quality_score`
+- `would_use_again`
+- `notes`
+- `created_at`
+
+Default score scale:
+- 1 = bad / not useful
+- 2 = weak
+- 3 = usable
+- 4 = good
+- 5 = excellent
+
+#### `project_activity_signals`
+
+Purpose:
+Lightweight signals used for project intelligence.
+
+Fields:
+- `project_key`
+- `signal_type`
+- `signal_value`
+- `source`
+- `confidence`
+- `created_at`
+
+Example signal types:
+- `last_touched`
+- `blocked_age_days`
+- `top3_count`
+- `quick_capture_count`
+- `ai_usage_recent`
+- `needs_review`
+- `stale_project`
+
+### Best AI Tool Recommendation v1
+
+Recommendation should be transparent and explainable.
+
+Canonical score:
+
+```txt
+recommended_tool_score =
+  availability_score * 0.35
++ project_fit_score * 0.35
++ project_usefulness_score * 0.20
++ task_type_fit_score * 0.10
+```
+
+Score parts:
+
+#### `availability_score`
+Based on:
+- current usage/remaining percent
+- reset time
+- plan availability
+- recent collector freshness
+- manual availability override
+
+#### `project_fit_score`
+Based on:
+- project default AI tool
+- project type
+- repo/project context
+- known tool strengths
+- manual project-tool preferences
+
+#### `project_usefulness_score`
+Based on:
+- prior usefulness/output-quality scores for that tool on that project
+- “would use again” history
+- manual corrections
+
+#### `task_type_fit_score`
+Based on:
+- coding
+- writing
+- image/design
+- research
+- summarization
+- planning
+- debugging
+- data/schema work
+
+Recommendation UI should show:
+- recommended tool
+- score
+- top reasons
+- missing data
+- confidence
+- manual override button/field
+
+Do not hide uncertainty.
+
+### Phase 3 Cards
+
+Phase 3 should add these cards/pages in order:
+
+1. `Best AI Tool Right Now`
+   - recommended tool
+   - score breakdown
+   - reason text
+   - missing data
+   - override
+
+2. `AI Tool Availability`
+   - all tracked tools
+   - account labels
+   - plan type
+   - usage/remaining
+   - reset timers
+   - freshness/confidence
+
+3. `AI Value Feedback`
+   - quick 1–5 usefulness/output score
+   - would-use-again toggle
+   - task type
+   - project link
+   - notes
+
+4. `Codex Historical Usage`
+   - 5-hour usage trend
+   - weekly usage trend
+   - session count
+   - token trend
+   - safe project-label usage
+
+5. `Project Health`
+   - stale projects
+   - blocked age
+   - needs review
+   - recent captures
+   - active Top 3 linkage
+
+6. `Weekly Summary v1`
+   - AI usage summary
+   - completed Top 3
+   - highest momentum projects
+   - blocked/needs-review items
+   - collector health
+
+### Phase 3 Collector Expansion
+
+Collector order should be conservative:
+
+1. Codex scheduled live collector
+2. Codex historical aggregate collector
+3. Claude Code local discovery
+4. ChatGPT subscription/usage source discovery
+5. Claude/Cowork/Design availability source discovery
+
+Rules:
+- Add one collector at a time.
+- Run manual first.
+- Add schedule only after manual runs are safe.
+- Each collector must have:
+  - source label
+  - freshness
+  - confidence
+  - sanitized output
+  - secret scan impact check
+  - collector health status
+
+### Phase 3 UX Defaults
+
+Recommended defaults:
+- Recommendations are advisory, not automatic.
+- Manual override always wins.
+- Unknown data should show as unknown, not zero.
+- Stale collector data should be visually obvious.
+- Never recommend based on stale data without warning.
+- Keep Daily page useful; do not bury it under analytics.
+
+### Phase 3 Stop Point
+
+Phase 3 should stop when the system can answer:
+
+```txt
+What should I work on?
+Which AI tool should I use?
+Why that tool?
+What data is missing or stale?
+Which projects need attention?
+```
+
+Phase 3 should not continue until it becomes a full automation platform.
+
+### Phase 3 Dependencies From Phase 2
+
+Phase 2 should prepare for Phase 3 by:
+- using stable `project_key` values
+- storing project status history if easy
+- adding collector health in a reusable way
+- using `account_key_hash` consistently
+- adding `task_type` where practical
+- allowing manual notes/corrections
+- keeping card APIs clean and reusable
+
+Do not let Phase 2 hardcode a Daily page in a way that prevents:
+- tool registry
+- project registry
+- historical charts
+- recommendations
+- weekly summaries
+
+### Phase 3 Questions To Resolve Later
+
+Before coding Phase 3, decide:
+- exact task type list
+- exact score UI for usefulness/output quality
+- whether AI feedback is required or optional after a task
+- which projects get default AI-tool preferences first
+- whether Weekly Summary is a page or card group
+- whether scheduled Codex collection runs at logon, every hour, or both
+- whether non-Codex source discovery starts with Claude Code or ChatGPT
+
+
+## Phase 3 Plan
+
+Phase 3 should begin only after Phase 2 produces a useful Daily Command Center.
+
+Phase 3 target:
+
+```txt
+AI + Project Intelligence v1
+```
+
+Purpose:
+Turn the Daily dashboard from a manual command center into a smarter decision helper.
+
+Phase 3 should not be a full automation platform yet. It should add better recommendations, more AI-tool visibility, and stronger project intelligence while keeping the system local-first and safe.
+
+### Phase 3 Goals
+
+1. Add the first version of “best AI tool right now.”
+2. Add richer AI usage/value tracking across tools.
+3. Add scheduled-but-safe collectors where Phase 1/2 manual collectors have proven stable.
+4. Add project activity and project-health signals.
+5. Add historical usage charts and weekly summaries.
+6. Keep manual override/correction available everywhere.
+
+### Phase 3 Build Order
+
+#### 1. AI Tool Registry v1
+
+Add a registry for tracked AI tools and subscriptions.
+
+Initial tools:
+- ChatGPT
+- Codex
+- Claude
+- Claude Code
+- Claude Cowork
+- Claude Design
+
+Fields:
+- provider
+- tool
+- account_key_hash
+- account_label
+- plan_type
+- known_limits
+- reset_rules
+- current_availability
+- confidence
+- freshness
+- last_checked_at
+- notes
+
+Rules:
+- Start with known/safe data only.
+- If a provider has no safe collector yet, show it as manual or unknown.
+- Do not scrape or store sensitive raw account data.
+
+#### 2. Best AI Tool Recommendation v1
+
+Implement the first recommendation card:
+
+```txt
+Best AI Tool Right Now
+```
+
+Use the existing scoring direction:
+
+```txt
+recommended_tool_score =
+  availability_score * 0.35
++ project_fit_score * 0.35
++ project_usefulness_score * 0.20
++ task_type_fit_score * 0.10
+```
+
+Phase 3 behavior:
+- Start with transparent scoring.
+- Show why a tool is recommended.
+- Show confidence and missing data.
+- Allow manual override.
+- Do not pretend uncertain data is certain.
+
+Inputs:
+- current usage/limits
+- project default tool
+- project status/priority
+- recent usefulness/output-quality scores
+- manual preferences
+- task type if available
+
+#### 3. AI Usefulness / Output Quality Scoring
+
+Resolve the open question for score scale.
+
+Recommended default:
+- 1–5 scale
+- optional notes
+- optional task type
+- optional project
+- optional “would use again” boolean
+
+Fields:
+- tool
+- model
+- project_key
+- task_type
+- usefulness_score
+- output_quality_score
+- would_use_again
+- notes
+- created_at
+
+Rules:
+- Manual first.
+- Keep it fast to enter.
+- Use it later for recommendation logic.
+
+#### 4. Scheduled Collector v1
+
+Only add scheduled collection after manual collectors are proven stable.
+
+Scope:
+- Codex live usage collector can be scheduled first.
+- Collector cadence should respect known refresh intervals.
+- Default cadence should be conservative.
+- Startup/autostart should use Windows Task Scheduler first.
+
+Rules:
+- No scheduler until safety checks pass.
+- Logs must be sanitized.
+- Failures must show safe error messages only.
+- User must be able to disable scheduled collection easily.
+
+#### 5. Historical AI Usage Charts
+
+Add historical charts for safe aggregate data.
+
+Initial charts:
+- Codex 5-hour usage trend
+- Codex weekly usage trend
+- Codex session count by day/week
+- Codex token trend by day/week
+- usage by safe project label
+- collector run health over time
+
+Charts should show:
+- freshness
+- confidence
+- source
+- account label
+- date range
+
+#### 6. Weekly Summary v1
+
+Add the first Weekly page or Weekly card group after Daily is stable.
+
+Initial cards:
+- AI usage summary
+- highest-use projects
+- collector health summary
+- completed Top 3 items
+- blocked/needs-review items
+- project momentum
+
+Do not build full Monthly yet unless Weekly is working.
+
+#### 7. Project Intelligence v1
+
+Enhance project registry with simple signals:
+
+- last touched
+- status age
+- blocked age
+- recent quick captures
+- active Top 3 count
+- AI usage by project
+- stale project warning
+- needs-review queue
+
+Rules:
+- Do not over-automate decisions.
+- Show suggestions, not commands.
+- Keep manual correction.
+
+#### 8. Non-Codex AI Sources
+
+Begin adding non-Codex sources only where safe.
+
+Likely order:
+1. Claude Code local logs/source discovery
+2. ChatGPT usage/limits if a safe source is confirmed
+3. Claude/Cowork/Design subscription availability if safe source is confirmed
+
+Rules:
+- Do not add browser scraping unless explicitly approved.
+- Do not store raw account pages.
+- Do not store prompt history.
+- Treat uncertain plan/reset data as uncertain.
+
+### Phase 3 Definition of Done
+
+Phase 3 is done when:
+- AI Tool Registry exists.
+- Best AI Tool card works with transparent scoring.
+- Usefulness/output-quality scores can be entered.
+- Codex scheduled collector can run safely or is explicitly deferred.
+- Historical AI usage charts are visible.
+- Weekly summary v1 exists or is explicitly deferred.
+- Project Intelligence v1 shows useful project-health signals.
+- All new collectors/scheduled tasks pass safety checks.
+- Manual override remains available.
+
+### Phase 3 Non-Goals
+
+Do not build yet:
+- fully automated project manager
+- autonomous task execution
+- external email/calendar automation
+- Slack/Discord/GitHub action automation
+- multi-user login
+- public hosting
+- complex notification system
+- full mobile/PWA polish
+- full Monthly/Quarterly planning system
+- advanced draggable/resizable dashboard customization
+- AI agent that changes data without review
+
+### Phase 3 Gate Questions
+
+Before Phase 3 starts, ask:
+
+1. Did Phase 2 Daily dashboard become genuinely useful?
+2. Which manual cards were annoying enough to automate?
+3. Which AI tools should be added next after Codex?
+4. Should scheduled Codex collection be enabled?
+5. What score scale should usefulness/output quality use?
+6. Which projects should get default AI-tool preferences first?
+7. Should Weekly v1 be a separate page or just a section under Daily?
+8. Is it time for historical charts, or should project intelligence come first?
+9. Are there any new safety concerns after Phase 2?
+10. What is the Phase 3 stop point?
+
+Recommended Phase 3 defaults:
+- Add AI Tool Registry first.
+- Add Best AI Tool card second.
+- Use 1–5 usefulness/output-quality scores.
+- Enable scheduled Codex collection only after another secret scan.
+- Add historical Codex charts before non-Codex collectors.
+- Add Claude Code before ChatGPT browser/session collectors.
 
 
 ## Implementation Backlog
