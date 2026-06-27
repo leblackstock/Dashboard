@@ -1,6 +1,6 @@
 # Phase 1 Codex Usage Pipeline Plan
 
-Current master spec: `dashboard_master_spec_v4.38.md`
+Current master spec: `dashboard_master_spec_v4.41.md`
 
 Approved decisions have been applied to this plan. Do not start coding until a separate implementation request is given.
 
@@ -18,7 +18,7 @@ Codex live usage collector
 
 Phase 1 includes:
 
-- Repo skeleton and repo-quality guardrails from `dashboard_master_spec_v4.38.md`.
+- Repo skeleton and repo-quality guardrails from `dashboard_master_spec_v4.41.md`.
 - Codex live usage collector using the confirmed `/wham/usage` source.
 - Safe Codex auth reader that keeps tokens in memory only.
 - Sanitized mapper and JSON snapshot writer.
@@ -131,7 +131,7 @@ Use references only:
 
 ## D. Updated Build Order
 
-1. Create repo skeleton and copy/reference `dashboard_master_spec_v4.38.md`.
+1. Create repo skeleton and copy/reference `dashboard_master_spec_v4.41.md`.
 2. Add repo-quality files: `AGENTS.md`, `.gitignore`, `.env.example`, `.gitleaks.toml`, `docs/runbook.md`, `docs/decisions.md`, `docs/handoff.md`, `Taskfile.yml`.
 3. Set up backend project with `uv`, `pyproject.toml`, `uv.lock`, FastAPI, `pydantic-settings`, pytest, and Ruff.
 4. Add SQLite `schema.sql` for `ai_accounts`, `ai_usage_snapshots`, and `collector_runs`.
@@ -227,7 +227,7 @@ Expected files to create or modify:
 - `docs/decisions.md`
 - `docs/handoff.md`
 - `docs/phase1_quick_start.md`
-- `docs/dashboard_master_spec_v4.38.md`
+- `docs/dashboard_master_spec_v4.41.md`
 
 Generated/local-only, gitignored:
 

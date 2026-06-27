@@ -2,7 +2,7 @@
 
 ## 2026-06-27 — Phase 1 Stack And Scope
 
-- Use `dashboard_master_spec_v4.38.md` as the current approved master spec.
+- Use `dashboard_master_spec_v4.41.md` as the current approved master spec.
 - Implement Phase 1 only: Codex collector, sanitized snapshot, SQLite row, FastAPI endpoint, one Codex Usage card, startup/run support, and docs.
 - Use `Taskfile.yml`, not `justfile`.
 - Use `uv` with `pyproject.toml` and `uv.lock`; do not add `requirements.txt` unless there is a clear reason.

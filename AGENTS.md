@@ -1,8 +1,8 @@
 # Dashboard Agent Instructions
 
-Current approved master spec: `dashboard_master_spec_v4.38.md`.
+Current approved master spec: `dashboard_master_spec_v4.41.md`.
 
-If the root spec and `docs/dashboard_master_spec_v4.38.md` ever differ, use the newest approved master spec as authoritative.
+If the root spec and `docs/dashboard_master_spec_v4.41.md` ever differ, use the newest approved master spec as authoritative.
 
 ## Phase 1 Scope Lock
 

@@ -1,7 +1,7 @@
-# Dashboard Master Spec v4.38
+# Dashboard Master Spec v4.41
 
 Created: 2026-06-26
-Previous version: v4.37
+Previous version: v4.40
 
 ## Core Concept
 
@@ -1481,7 +1481,7 @@ dashboard/
     scan_repos/
   src/
   docs/
-    dashboard_master_spec_v4.38.md
+    dashboard_master_spec_v4.41.md
 ```
 
 ## Example AI Subscription Limits JSON
@@ -1595,7 +1595,7 @@ dashboard/
     raw/
     sanitized/
   docs/
-    dashboard_master_spec_v4.38.md
+    dashboard_master_spec_v4.41.md
 ```
 
 First collector:
@@ -2595,7 +2595,7 @@ dashboard/
     sanitized/
       codex/
   docs/
-    dashboard_master_spec_v4.38.md
+    dashboard_master_spec_v4.41.md
 ```
 
 Rules:
@@ -2874,6 +2874,197 @@ Phase 1 is not required to include:
 - project recommendation engine
 - full project registry UI
 - notifications
+
+
+## Phase 1 Implementation Status
+
+Phase 1 has been functionally implemented.
+
+Implemented pipeline:
+
+```txt
+Codex live usage collector
+→ sanitized JSON snapshot
+→ SQLite row
+→ FastAPI endpoint
+→ one frontend Codex Usage card
+```
+
+Local services:
+- Backend: `http://127.0.0.1:8000`
+- Frontend: `http://127.0.0.1:5173/`
+- API: `http://127.0.0.1:8000/api/ai/codex/live-usage`
+
+Completed deliverables:
+- repo skeleton
+- safety files
+- backend collector foundation
+- SQLite schema
+- FastAPI route
+- React/Vite/TypeScript/Tailwind Codex Usage card
+- fake-fixture tests
+- docs/runbook/handoff
+- `Taskfile.yml`
+- `.gitleaks.toml`
+- `uv.lock`
+- `frontend/pnpm-lock.yaml`
+
+Verification completed:
+- `uv run pytest` passed with 4 tests
+- `uv run ruff check .` passed
+- `npx pnpm@9.15.9 build` passed
+- database initialized successfully
+- manual collector ran successfully
+- one sanitized record written
+- API health returned `ok`
+- API live usage returned one account snapshot
+- sanitized JSON/SQLite audit found zero forbidden key/column hits
+
+Generated local artifacts:
+- `data/dashboard.db`
+- `data/sanitized/codex/latest.json`
+- `frontend/dist`
+- `frontend/node_modules`
+- `.venv`
+
+These generated artifacts are gitignored.
+
+Known remaining Phase 1 safety task:
+- `task` and `gitleaks` were not installed on PATH, so the redacted Gitleaks scan could not be run yet.
+- Before commit, handoff, or Phase 2, install/run Gitleaks or otherwise complete an equivalent secret scan.
+
+Scope compliance:
+- No Phase 2 features were added.
+- No scheduler was added.
+- No MCP tool was added.
+- No external auth was added.
+- No new database was added.
+- No extra integration was added.
+
+## GitHub Remote Repo
+
+Dashboard remote repository:
+
+```txt
+https://github.com/leblackstock/Dashboard.git
+```
+
+Current intended use:
+- Empty GitHub repo for publishing the completed Phase 1 dashboard code.
+- Do not push until the Phase 1 acceptance gate passes.
+
+Before first push:
+- run tests
+- run lint
+- run frontend build
+- run secret scan
+- verify generated/local artifacts are gitignored
+- verify no raw auth/token/payload/path data is tracked
+
+Recommended first commit message:
+
+```txt
+Phase 1 Codex usage pipeline
+```
+
+Recommended first tag after approval:
+
+```txt
+phase1-codex-usage-v1
+```
+
+Remote setup, if needed:
+
+```bash
+git remote add origin https://github.com/leblackstock/Dashboard.git
+git branch -M main
+```
+
+Push only after Lauren approves:
+
+```bash
+git push -u origin main
+git tag phase1-codex-usage-v1
+git push origin phase1-codex-usage-v1
+```
+
+
+## Phase 1 Acceptance Gate Result
+
+Phase 1 acceptance gate passed.
+
+Secret scan:
+- Gitleaks installed/run from official release.
+- Version: `8.30.1`
+- Final configured/redacted scan:
+  - `gitleaks_exit_code=0`
+  - `gitleaks_findings=0`
+
+Gitleaks config note:
+- `.gitleaks.toml` was updated to allowlist only approved generated/local-only artifact paths.
+- The first raw workspace scan flagged a gitignored sanitized snapshot hash.
+- Final configured scan is clean.
+
+Gitignore/artifact check:
+- Current implementation folder was not initially a Git repository, so `.gitignore` rules were verified in a temporary Git sandbox.
+- Ignore paths checked: 10
+- Ignore paths passed: 10
+
+Confirmed ignored:
+- `data/dashboard.db`
+- `data/sanitized/codex/latest.json`
+- `frontend/dist`
+- `frontend/node_modules`
+- `.venv`
+- `frontend/tsconfig.tsbuildinfo`
+- logs
+- raw/debug folders
+- `.env`
+
+Safety audit:
+- Source safety audit found zero hits for token-like values, bearer values, refresh/access token values, or full drive paths.
+- No source-file safety issues found.
+
+Verification:
+- `uv run pytest` passed with 4 tests.
+- `uv run ruff check .` passed.
+- `npx pnpm@9.15.9 build` passed.
+- Frontend build emitted Node experimental warnings only; build succeeded.
+
+Phase 1 status:
+- Accepted as clean enough to commit/push after Lauren approval.
+- No push performed yet.
+
+Suggested checkpoint commit:
+
+```txt
+chore: complete phase 1 codex usage pipeline
+```
+
+Suggested tag:
+
+```txt
+phase1-codex-usage-v0.1.0
+```
+
+Next step:
+- Initialize Git if needed.
+- Set remote to `https://github.com/leblackstock/Dashboard.git`.
+- Create checkpoint commit.
+- Push only after explicit approval.
+- Create/push tag after commit is confirmed.
+
+
+## Phase 1 Acceptance Gate
+
+Phase 1 is accepted when:
+- functional verification remains passing
+- generated artifacts remain gitignored
+- secret scan is completed
+- no secrets/raw auth/raw payloads/raw paths are found in committed files
+- runbook/handoff accurately describe the current state
+
+After acceptance, move to the Phase 1 → Phase 2 Gate Questions before starting Phase 2.
 
 
 ## Phase 1 → Phase 2 Gate Questions

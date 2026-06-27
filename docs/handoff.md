@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Phase 1 implementation has been built from `docs/phase1_codex_usage_pipeline_plan.md` and `dashboard_master_spec_v4.38.md`.
+Phase 1 implementation has been built from `docs/phase1_codex_usage_pipeline_plan.md` and `dashboard_master_spec_v4.41.md`.
 
 The repo is scoped to the Codex Usage Card pipeline only.
 

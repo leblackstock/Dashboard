@@ -1,6 +1,6 @@
 # Dashboard Phase 1 Runbook
 
-Current approved master spec: `dashboard_master_spec_v4.38.md`.
+Current approved master spec: `dashboard_master_spec_v4.41.md`.
 
 Phase 1 builds only this pipeline:
 
