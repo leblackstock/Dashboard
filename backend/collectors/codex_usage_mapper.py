@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from backend.collectors.codex_auth import derive_account_label, sanitize_identity_text
+
 FORBIDDEN_OUTPUT_KEYS = {
     "access_token",
     "refresh_token",
@@ -17,6 +19,37 @@ FORBIDDEN_OUTPUT_KEYS = {
     "raw_log",
     "workspace_path",
 }
+
+IDENTITY_CONTAINERS = ("account", "user", "profile", "identity")
+
+
+def extract_codex_usage_identity(payload: dict[str, Any]) -> dict[str, str | None]:
+    candidates = [payload]
+    candidates.extend(
+        value for key in IDENTITY_CONTAINERS if isinstance((value := payload.get(key)), dict)
+    )
+    email = next(
+        (
+            value
+            for candidate in candidates
+            if (value := candidate.get("email") or candidate.get("preferred_username"))
+            is not None
+        ),
+        None,
+    )
+    name = next(
+        (
+            value
+            for candidate in candidates
+            if (value := candidate.get("name") or candidate.get("display_name")) is not None
+        ),
+        None,
+    )
+    safe_name = sanitize_identity_text(name)
+    return {
+        "account_label": derive_account_label(email, safe_name),
+        "account_name": safe_name,
+    }
 
 
 def compute_freshness(collected_at: str | None = None) -> str:

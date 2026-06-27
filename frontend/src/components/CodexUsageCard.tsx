@@ -32,11 +32,11 @@ function formatDate(value: string | null) {
 }
 
 function formatCountdown(value: string | null) {
-  if (!value) return "Unavailable";
+  if (!value) return null;
   const resetAt = new Date(value).getTime();
-  if (Number.isNaN(resetAt)) return "Unavailable";
+  if (Number.isNaN(resetAt)) return null;
   const diffMs = resetAt - Date.now();
-  if (diffMs <= 0) return "Ready";
+  if (diffMs <= 0) return "ready";
   const totalMinutes = Math.ceil(diffMs / 60_000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -45,12 +45,34 @@ function formatCountdown(value: string | null) {
   return `${minutes}m`;
 }
 
-function UsageWindow({ label, quota }: { label: string; quota: QuotaWindow }) {
+function formatResetClock(value: string | null, includeWeekday: boolean) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const formatted = new Intl.DateTimeFormat(undefined, {
+    timeZone: "America/New_York",
+    weekday: includeWeekday ? "short" : undefined,
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(date);
+  return `${formatted} ET`;
+}
+
+function UsageWindow({
+  label,
+  quota,
+  includeResetWeekday = false
+}: {
+  label: string;
+  quota: QuotaWindow;
+  includeResetWeekday?: boolean;
+}) {
   const remainingLabel =
     quota.remaining_percent == null ? "Unavailable" : `${formatPercent(quota.remaining_percent)} left`;
   const usedLabel =
     quota.used_percent == null ? "Used unavailable" : `${formatPercent(quota.used_percent)} used`;
-  const resetLabel = formatCountdown(quota.reset_at);
+  const resetCountdown = formatCountdown(quota.reset_at);
+  const resetClock = formatResetClock(quota.reset_at, includeResetWeekday);
   return (
     <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
       <div className="flex items-center justify-between gap-3">
@@ -58,9 +80,16 @@ function UsageWindow({ label, quota }: { label: string; quota: QuotaWindow }) {
         <span className="text-sm text-muted">{remainingLabel}</span>
       </div>
       <Progress value={quota.used_percent} />
-      <div className="flex items-center justify-between gap-3 text-xs text-muted">
+      <div className="flex items-start justify-between gap-3 text-xs text-muted">
         <span>{usedLabel}</span>
-        <span>Reset {resetLabel}</span>
+        {resetCountdown && resetClock ? (
+          <span className="flex flex-col items-end gap-1 text-right">
+            <span>{resetCountdown === "ready" ? "Reset ready" : `Reset in ${resetCountdown}`}</span>
+            <span>Resets at {resetClock}</span>
+          </span>
+        ) : (
+          <span>Reset Unavailable</span>
+        )}
       </div>
     </div>
   );
@@ -116,37 +145,44 @@ function AccountUsage({
 
       <div className="grid gap-3 md:grid-cols-2">
         <UsageWindow label="5-hour quota" quota={account.quota_5h} />
-        <UsageWindow label="Weekly quota" quota={account.quota_weekly} />
+        <UsageWindow
+          label="Weekly quota"
+          quota={account.quota_weekly}
+          includeResetWeekday
+        />
       </div>
     </div>
   );
 }
 
 function accountBaseLabel(account: CodexUsageAccount) {
-  const sanitizedLabel = account.account_label?.trim() || account.account_name?.trim();
-  if (!sanitizedLabel) return "Codex account";
+  const candidates = [account.account_label?.trim(), account.account_name?.trim()].filter(
+    (value): value is string => Boolean(value)
+  );
+  const emailLabel = candidates.find((candidate) => candidate.indexOf("@") > 0);
+  if (emailLabel) return emailLabel.slice(0, emailLabel.indexOf("@"));
 
-  const atIndex = sanitizedLabel.indexOf("@");
-  return atIndex > 0 ? sanitizedLabel.slice(0, atIndex) : sanitizedLabel;
+  return (
+    candidates.find((candidate) => !/^codex account(?: \d+)?$/i.test(candidate)) ?? null
+  );
 }
 
 function accountDisplayLabels(accounts: CodexUsageAccount[]) {
   const baseLabels = accounts.map(accountBaseLabel);
   const totals = new Map<string, number>();
-  const occurrences = new Map<string, number>();
 
   for (const label of baseLabels) {
+    if (!label) continue;
     const key = label.toLocaleLowerCase();
     totals.set(key, (totals.get(key) ?? 0) + 1);
   }
 
+  let fallbackIndex = 0;
   return baseLabels.map((label) => {
+    if (!label) return `Codex account ${++fallbackIndex}`;
     const key = label.toLocaleLowerCase();
     if ((totals.get(key) ?? 0) === 1) return label;
-
-    const occurrence = (occurrences.get(key) ?? 0) + 1;
-    occurrences.set(key, occurrence);
-    return `${label} ${occurrence}`;
+    return `Codex account ${++fallbackIndex}`;
   });
 }
 
@@ -241,13 +277,10 @@ export function CodexUsageCard() {
                     collectMutation.reset();
                   }}
                   type="button"
-                  title={`${displayLabels[index]}, last updated ${formatDate(candidate.collected_at)}`}
+                  title={displayLabels[index]}
                 >
                   <span className="block max-w-[180px] truncate text-sm font-medium">
                     {displayLabels[index]}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    Updated {formatDate(candidate.collected_at)}
                   </span>
                 </button>
               );

@@ -14,7 +14,7 @@ def test_api_response_contains_sanitized_shape(tmp_path, monkeypatch):
         {
             "provider": "openai",
             "account_key_hash": "hash-123",
-            "account_label": "local@example.test",
+            "account_label": "local",
             "account_name": "Local Test",
             "auth_mode": "codex_auth",
         },
@@ -46,9 +46,17 @@ def test_api_response_contains_sanitized_shape(tmp_path, monkeypatch):
     response = get_live_usage_response().model_dump()
 
     assert response["accounts"][0]["account_key_hash"] == "hash-123"
+    assert response["accounts"][0]["account_label"] == "local"
+    assert response["accounts"][0]["account_name"] == "Local Test"
     assert response["accounts"][0]["quota_5h"]["used_percent"] == 34.5
     serialized = str(response).lower()
-    forbidden_terms = ["access_token", "refresh_token", "authorization", "raw_payload"]
+    forbidden_terms = [
+        "access_token",
+        "refresh_token",
+        "id_token",
+        "authorization",
+        "raw_payload",
+    ]
     assert all(term not in serialized for term in forbidden_terms)
 
 

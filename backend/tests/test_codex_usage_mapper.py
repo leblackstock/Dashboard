@@ -2,7 +2,27 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from backend.collectors.codex_usage_mapper import FORBIDDEN_OUTPUT_KEYS, map_codex_usage_payload
+from backend.collectors.codex_usage_mapper import (
+    FORBIDDEN_OUTPUT_KEYS,
+    extract_codex_usage_identity,
+    map_codex_usage_payload,
+)
+
+
+def test_usage_identity_extracts_sanitized_label_from_fixture():
+    identity = json.loads(
+        Path("backend/tests/fixtures/fake_codex_identity.json").read_text(encoding="utf-8")
+    )
+
+    result = extract_codex_usage_identity(identity)
+
+    assert result == {
+        "account_label": "local",
+        "account_name": "Local Test",
+    }
+    serialized = json.dumps(result, sort_keys=True)
+    assert identity["email"] not in serialized
+    assert all(term not in serialized.lower() for term in FORBIDDEN_OUTPUT_KEYS)
 
 
 def test_mapper_outputs_sanitized_fields_only():

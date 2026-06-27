@@ -15,7 +15,10 @@ from backend.app.db import (
 )
 from backend.app.settings import get_settings
 from backend.collectors.codex_auth import CodexAuthError, load_codex_auth
-from backend.collectors.codex_usage_mapper import map_codex_usage_payload
+from backend.collectors.codex_usage_mapper import (
+    extract_codex_usage_identity,
+    map_codex_usage_payload,
+)
 
 COLLECTOR_NAME = "codex_live_usage"
 USAGE_ENDPOINT = "https://chatgpt.com/backend-api/wham/usage"
@@ -29,14 +32,20 @@ def collect_codex_live_usage() -> dict[str, Any]:
         auth = load_codex_auth()
         payload = _fetch_usage_payload(auth.access_token)
         collected_at = utc_now_iso()
+        usage_identity = extract_codex_usage_identity(payload)
+        account_label = usage_identity["account_label"] or auth.account_label
+        account_name = usage_identity["account_name"] or auth.account_name
         snapshot = map_codex_usage_payload(
             payload,
             account_key_hash=auth.account_key_hash,
-            account_label=auth.account_label,
-            account_name=auth.account_name,
+            account_label=account_label,
+            account_name=account_name,
             collected_at=collected_at,
         )
-        upsert_account(auth.safe_account_metadata())
+        account_metadata = auth.safe_account_metadata()
+        account_metadata["account_label"] = account_label
+        account_metadata["account_name"] = account_name
+        upsert_account(account_metadata)
         insert_usage_snapshot(snapshot)
         snapshot_file = write_sanitized_snapshot(snapshot)
         finished_at = utc_now_iso()
