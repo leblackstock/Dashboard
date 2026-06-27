@@ -169,13 +169,19 @@ def latest_codex_usage_rows(db_path: Path | None = None) -> list[sqlite3.Row]:
             FROM ai_usage_snapshots AS s
             LEFT JOIN ai_accounts AS a
               ON a.account_key_hash = s.account_key_hash
-            INNER JOIN (
-              SELECT account_key_hash, MAX(id) AS latest_id
-              FROM ai_usage_snapshots
-              WHERE provider = 'openai' AND tool = 'codex'
-              GROUP BY account_key_hash
-            ) AS latest
-              ON latest.latest_id = s.id
+            WHERE
+              s.provider = 'openai'
+              AND s.tool = 'codex'
+              AND s.id = (
+                SELECT s2.id
+                FROM ai_usage_snapshots AS s2
+                WHERE
+                  s2.provider = 'openai'
+                  AND s2.tool = 'codex'
+                  AND s2.account_key_hash = s.account_key_hash
+                ORDER BY s2.collected_at DESC, s2.id DESC
+                LIMIT 1
+              )
             ORDER BY s.collected_at DESC, s.id DESC
             """
         ).fetchall()
@@ -246,6 +252,31 @@ def create_project(project: dict[str, Any], *, db_path: Path | None = None) -> d
     if selected is None:
         raise RuntimeError("project_create_failed")
     return selected
+
+
+def ensure_project(
+    *,
+    project_key: str,
+    project_label: str,
+    priority: int = 0,
+    default_ai_tool: str | None = None,
+    safe_notes: str | None = None,
+    db_path: Path | None = None,
+) -> dict[str, Any]:
+    selected = get_project(project_key, db_path=db_path)
+    if selected is not None:
+        return selected
+    return create_project(
+        {
+            "project_key": project_key,
+            "project_label": project_label,
+            "priority": priority,
+            "status": "Active",
+            "default_ai_tool": default_ai_tool,
+            "safe_notes": safe_notes,
+        },
+        db_path=db_path,
+    )
 
 
 def update_project(
@@ -391,6 +422,137 @@ def update_top_item(
             values,
         )
     return get_top_item(item_id, db_path=db_path)
+
+
+def list_brief_suggestions(
+    *,
+    statuses: tuple[str, ...] = ("pending",),
+    limit: int = 20,
+    db_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    limit = max(1, min(limit, 100))
+    with connect(db_path) as connection:
+        if statuses:
+            placeholders = ", ".join("?" for _ in statuses)
+            rows = connection.execute(
+                f"""
+                SELECT
+                  s.*,
+                  p.project_label
+                FROM brief_suggestions AS s
+                LEFT JOIN projects AS p
+                  ON p.project_key = s.project_key
+                WHERE s.status IN ({placeholders})
+                ORDER BY s.imported_at DESC, s.id DESC
+                LIMIT ?
+                """,
+                (*statuses, limit),
+            ).fetchall()
+        else:
+            rows = connection.execute(
+                """
+                SELECT
+                  s.*,
+                  p.project_label
+                FROM brief_suggestions AS s
+                LEFT JOIN projects AS p
+                  ON p.project_key = s.project_key
+                ORDER BY s.imported_at DESC, s.id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+    return [row_to_dict(row) for row in rows]
+
+
+def get_brief_suggestion(
+    suggestion_id: int,
+    *,
+    db_path: Path | None = None,
+) -> dict[str, Any] | None:
+    with connect(db_path) as connection:
+        row = connection.execute(
+            """
+            SELECT
+              s.*,
+              p.project_label
+            FROM brief_suggestions AS s
+            LEFT JOIN projects AS p
+              ON p.project_key = s.project_key
+            WHERE s.id = ?
+            """,
+            (suggestion_id,),
+        ).fetchone()
+    return row_to_dict(row) if row else None
+
+
+def insert_brief_suggestion(
+    suggestion: dict[str, Any],
+    *,
+    db_path: Path | None = None,
+) -> bool:
+    now = utc_now_iso()
+    with connect(db_path) as connection:
+        existing = connection.execute(
+            "SELECT id FROM brief_suggestions WHERE suggestion_key = ?",
+            (suggestion["suggestion_key"],),
+        ).fetchone()
+        if existing is not None:
+            return False
+        connection.execute(
+            """
+            INSERT INTO brief_suggestions (
+              suggestion_key, source, source_label, briefing_date, source_item_type,
+              source_item_index, title, reason, project_key, urgency, source_status, status,
+              imported_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                suggestion["suggestion_key"],
+                suggestion["source"],
+                suggestion["source_label"],
+                suggestion["briefing_date"],
+                suggestion["source_item_type"],
+                suggestion["source_item_index"],
+                suggestion["title"],
+                suggestion.get("reason"),
+                suggestion.get("project_key"),
+                suggestion.get("urgency"),
+                suggestion.get("source_status"),
+                suggestion.get("status", "pending"),
+                now,
+                now,
+            ),
+        )
+    return True
+
+
+def update_brief_suggestion(
+    suggestion_id: int,
+    updates: dict[str, Any],
+    *,
+    db_path: Path | None = None,
+) -> dict[str, Any] | None:
+    allowed_fields = {
+        "status",
+        "accepted_top_item_id",
+        "accepted_at",
+        "ignored_at",
+    }
+    selected_updates = {key: value for key, value in updates.items() if key in allowed_fields}
+    if not selected_updates:
+        return get_brief_suggestion(suggestion_id, db_path=db_path)
+
+    selected_updates["updated_at"] = utc_now_iso()
+    set_clause = ", ".join(f"{key} = ?" for key in selected_updates)
+    values = [*selected_updates.values(), suggestion_id]
+    with connect(db_path) as connection:
+        connection.execute(
+            f"UPDATE brief_suggestions SET {set_clause} WHERE id = ?",
+            values,
+        )
+    return get_brief_suggestion(suggestion_id, db_path=db_path)
 
 
 def list_quick_captures(

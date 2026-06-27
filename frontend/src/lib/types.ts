@@ -67,6 +67,34 @@ export type TopItem = {
   completed_at: string | null;
 };
 
+export type BriefSuggestion = {
+  id: number;
+  source: "woodcraft_brief_me";
+  source_label: string;
+  briefing_date: string;
+  source_item_type: "priority" | "next_action";
+  title: string;
+  reason: string | null;
+  project_key: string | null;
+  project_label: string | null;
+  urgency: string | null;
+  source_status: string | null;
+  status: "pending" | "accepted" | "ignored";
+  imported_at: string;
+  updated_at: string;
+  accepted_at: string | null;
+  ignored_at: string | null;
+};
+
+export type BriefSuggestionsImportResponse = {
+  status: "success" | "failed";
+  imported: number;
+  already_imported: number;
+  skipped: number;
+  safe_message: string;
+  message: string;
+};
+
 export type QuickCapture = {
   id: number;
   text: string;
@@ -109,6 +137,7 @@ export type CollectorHealthItem = {
 export type DailyDashboardResponse = {
   projects: Project[];
   top_items: TopItem[];
+  brief_suggestions: BriefSuggestion[];
   blocked_items: BlockedItem[];
   quick_captures: QuickCapture[];
   collector_health: CollectorHealthItem[];

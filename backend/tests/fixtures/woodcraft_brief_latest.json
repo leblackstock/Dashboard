@@ -1,0 +1,38 @@
+{
+  "briefing_date": "2026-06-27",
+  "timezone": "America/New_York",
+  "state": "current",
+  "source": "woodcraft_brief_me",
+  "priorities": [
+    {
+      "id": "p1",
+      "project_key": "woodworking-cnc",
+      "reason": "Keep the daily workspace moving.",
+      "source": "brief",
+      "status": "ready",
+      "title": "Review Woodcraft production queue",
+      "urgency": "high"
+    },
+    {
+      "id": "p2",
+      "reason": "Use the default Woodcraft project when no project key is provided.",
+      "source": "brief",
+      "status": "ready",
+      "title": "Choose the next Woodcraft workspace priority",
+      "urgency": "medium"
+    }
+  ],
+  "next_actions": [
+    {
+      "id": "a1",
+      "project_key": "social-media-marketing",
+      "reason": "Prepare the next safe handoff.",
+      "source": "brief",
+      "status": "next",
+      "title": "Prepare next Woodcraft social action"
+    }
+  ],
+  "project_status": {
+    "active": 3
+  }
+}

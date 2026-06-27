@@ -18,3 +18,19 @@ body {
 button {
   font: inherit;
 }
+
+[data-dashboard-drag-handle] {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+[data-dashboard-drag-handle]:active {
+  cursor: grabbing;
+}
+
+[data-dashboard-drag-handle] :is(button, input, select, textarea, a) {
+  cursor: auto;
+  touch-action: auto;
+  user-select: auto;
+}

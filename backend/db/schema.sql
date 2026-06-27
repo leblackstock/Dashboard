@@ -90,6 +90,36 @@ CREATE INDEX IF NOT EXISTS idx_daily_top_items_status_sort
 CREATE INDEX IF NOT EXISTS idx_daily_top_items_completed_at
   ON daily_top_items(completed_at);
 
+CREATE TABLE IF NOT EXISTS brief_suggestions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  suggestion_key TEXT NOT NULL UNIQUE,
+  source TEXT NOT NULL CHECK (source IN ('woodcraft_brief_me')),
+  source_label TEXT NOT NULL,
+  briefing_date TEXT NOT NULL,
+  source_item_type TEXT NOT NULL CHECK (source_item_type IN ('priority', 'next_action')),
+  source_item_index INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  reason TEXT,
+  project_key TEXT,
+  urgency TEXT,
+  source_status TEXT,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'accepted', 'ignored')),
+  accepted_top_item_id INTEGER,
+  imported_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  accepted_at TEXT,
+  ignored_at TEXT,
+  FOREIGN KEY (project_key) REFERENCES projects(project_key),
+  FOREIGN KEY (accepted_top_item_id) REFERENCES daily_top_items(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_brief_suggestions_status_imported
+  ON brief_suggestions(status, imported_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_brief_suggestions_source_date_type
+  ON brief_suggestions(source, briefing_date, source_item_type);
+
 CREATE TABLE IF NOT EXISTS quick_captures (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   text TEXT NOT NULL,

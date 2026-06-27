@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.routes.ai_codex import router as ai_codex_router
 from backend.app.routes.blocked_items import router as blocked_items_router
+from backend.app.routes.brief_suggestions import router as brief_suggestions_router
 from backend.app.routes.collector_health import router as collector_health_router
 from backend.app.routes.daily import router as daily_router
 from backend.app.routes.projects import router as projects_router
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
     app.include_router(daily_router)
     app.include_router(projects_router)
     app.include_router(top_items_router)
+    app.include_router(brief_suggestions_router)
     app.include_router(blocked_items_router)
     app.include_router(quick_captures_router)
     app.include_router(collector_health_router)

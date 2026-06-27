@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, RefreshCcw, ShieldCheck, Zap } from "lucide-react";
+import { useState } from "react";
 import { collectCodexUsage, fetchCodexUsage } from "../lib/api";
 import type { CodexUsageAccount, QuotaWindow } from "../lib/types";
 import { Badge } from "./ui/badge";
@@ -65,12 +66,18 @@ function UsageWindow({ label, quota }: { label: string; quota: QuotaWindow }) {
   );
 }
 
-function AccountUsage({ account }: { account: CodexUsageAccount }) {
+function AccountUsage({
+  account,
+  accountLabel
+}: {
+  account: CodexUsageAccount;
+  accountLabel: string;
+}) {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">{account.account_label ?? "Codex account"}</p>
+          <p className="text-sm text-muted">{accountLabel}</p>
           <h2 className="mt-1 text-2xl font-semibold text-ink">Codex Usage</h2>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -115,8 +122,37 @@ function AccountUsage({ account }: { account: CodexUsageAccount }) {
   );
 }
 
+function accountBaseLabel(account: CodexUsageAccount) {
+  const sanitizedLabel = account.account_label?.trim() || account.account_name?.trim();
+  if (!sanitizedLabel) return "Codex account";
+
+  const atIndex = sanitizedLabel.indexOf("@");
+  return atIndex > 0 ? sanitizedLabel.slice(0, atIndex) : sanitizedLabel;
+}
+
+function accountDisplayLabels(accounts: CodexUsageAccount[]) {
+  const baseLabels = accounts.map(accountBaseLabel);
+  const totals = new Map<string, number>();
+  const occurrences = new Map<string, number>();
+
+  for (const label of baseLabels) {
+    const key = label.toLocaleLowerCase();
+    totals.set(key, (totals.get(key) ?? 0) + 1);
+  }
+
+  return baseLabels.map((label) => {
+    const key = label.toLocaleLowerCase();
+    if ((totals.get(key) ?? 0) === 1) return label;
+
+    const occurrence = (occurrences.get(key) ?? 0) + 1;
+    occurrences.set(key, occurrence);
+    return `${label} ${occurrence}`;
+  });
+}
+
 export function CodexUsageCard() {
   const queryClient = useQueryClient();
+  const [selectedAccountKey, setSelectedAccountKey] = useState<string | null>(null);
   const query = useQuery({
     queryKey: ["codex-usage"],
     queryFn: fetchCodexUsage
@@ -130,13 +166,23 @@ export function CodexUsageCard() {
       void queryClient.invalidateQueries({ queryKey: ["daily-dashboard"] });
     }
   });
-  const account = query.data?.accounts[0];
-  const lastUpdated = collectMutation.data?.last_updated ?? account?.collected_at ?? null;
+  const accounts = query.data?.accounts ?? [];
+  const displayLabels = accountDisplayLabels(accounts);
+  const account =
+    accounts.find((candidate) => candidate.account_key_hash === selectedAccountKey) ??
+    accounts[0];
+  const selectedAccountIndex = account
+    ? accounts.findIndex((candidate) => candidate.account_key_hash === account.account_key_hash)
+    : -1;
+  const selectedAccountLabel = displayLabels[selectedAccountIndex] ?? "Codex account";
+  const lastUpdated = account?.collected_at ?? collectMutation.data?.last_updated ?? null;
   const collectFailed = collectMutation.data?.status === "failed" || collectMutation.isError;
   const collectMessage = collectMutation.isPending
     ? "Collecting…"
-    : collectMutation.isError
-      ? "Codex usage could not be refreshed. Try again later."
+    : collectFailed
+      ? accounts.length > 0
+        ? "Refresh failed. Showing last saved Codex usage."
+        : collectMutation.data?.message ?? "Codex usage could not be refreshed. Try again later."
       : collectMutation.data?.message;
 
   return (
@@ -177,12 +223,43 @@ export function CodexUsageCard() {
           ) : null}
           {lastUpdated ? <Badge tone="neutral">Last updated {formatDate(lastUpdated)}</Badge> : null}
         </div>
+        {accounts.length > 1 ? (
+          <div className="mb-5 flex flex-wrap gap-2" aria-label="Codex accounts">
+            {accounts.map((candidate, index) => {
+              const selected = candidate.account_key_hash === account?.account_key_hash;
+              return (
+                <button
+                  aria-pressed={selected}
+                  className={`rounded-md border px-3 py-2 text-left transition ${
+                    selected
+                      ? "border-cobalt bg-cobalt/15 text-ink"
+                      : "border-line bg-surface text-muted hover:border-cobalt/70 hover:text-ink"
+                  }`}
+                  key={candidate.account_key_hash}
+                  onClick={() => {
+                    setSelectedAccountKey(candidate.account_key_hash);
+                    collectMutation.reset();
+                  }}
+                  type="button"
+                  title={`${displayLabels[index]}, last updated ${formatDate(candidate.collected_at)}`}
+                >
+                  <span className="block max-w-[180px] truncate text-sm font-medium">
+                    {displayLabels[index]}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    Updated {formatDate(candidate.collected_at)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         {query.isLoading ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : query.isError ? (
           <p className="text-sm text-red-200">Unable to load Codex usage.</p>
         ) : account ? (
-          <AccountUsage account={account} />
+          <AccountUsage account={account} accountLabel={selectedAccountLabel} />
         ) : (
           <p className="text-sm text-muted">No Codex usage snapshot yet.</p>
         )}

@@ -19,6 +19,10 @@ class Settings(BaseSettings):
         alias="DASHBOARD_CORS_ORIGINS",
     )
     codex_home: Path | None = Field(default=None, alias="CODEX_HOME")
+    woodcraft_brief_source: Path = Field(
+        default=Path("../Woodcraft/60_automation/workspace_maintenance/brief_latest.json"),
+        alias="WOODCRAFT_BRIEF_SOURCE",
+    )
 
     @property
     def cors_origins(self) -> list[str]:

@@ -52,6 +52,67 @@ def test_api_response_contains_sanitized_shape(tmp_path, monkeypatch):
     assert all(term not in serialized for term in forbidden_terms)
 
 
+def test_api_returns_latest_snapshot_per_account_newest_first(tmp_path, monkeypatch):
+    db_path = tmp_path / "dashboard.db"
+    monkeypatch.setenv("DASHBOARD_DB_PATH", str(db_path))
+    get_settings.cache_clear()
+    init_db(db_path)
+
+    for account_key, label in (
+        ("account-a", "Account A"),
+        ("account-b", "Account B"),
+    ):
+        upsert_account(
+            {
+                "provider": "openai",
+                "account_key_hash": account_key,
+                "account_label": label,
+                "account_name": None,
+                "auth_mode": "codex_auth",
+            },
+            db_path=db_path,
+        )
+
+    def add_snapshot(account_key: str, collected_at: str, reset_credits: int) -> None:
+        insert_usage_snapshot(
+            {
+                "provider": "openai",
+                "tool": "codex",
+                "account_key_hash": account_key,
+                "plan_type": "plus",
+                "reset_credits_available": reset_credits,
+                "quota_5h_used_percent": 25,
+                "quota_5h_remaining_percent": 75,
+                "quota_5h_reset_at": "2026-06-27T18:00:00+00:00",
+                "quota_weekly_used_percent": 40,
+                "quota_weekly_remaining_percent": 60,
+                "quota_weekly_reset_at": "2026-07-01T00:00:00+00:00",
+                "session_count": 1,
+                "source_type": "official_endpoint",
+                "source_label": "chatgpt_backend_wham_usage",
+                "confidence": "high",
+                "freshness": "fresh",
+                "collected_at": collected_at,
+            },
+            db_path=db_path,
+        )
+
+    add_snapshot("account-a", "2026-06-27T14:00:00+00:00", 4)
+    add_snapshot("account-b", "2026-06-27T16:00:00+00:00", 3)
+    add_snapshot("account-a", "2026-06-27T12:00:00+00:00", 1)
+
+    response = get_live_usage_response().model_dump()
+
+    assert [account["account_key_hash"] for account in response["accounts"]] == [
+        "account-b",
+        "account-a",
+    ]
+    assert response["accounts"][1]["reset_credits_available"] == 4
+    serialized = str(response).lower()
+    forbidden_terms = ["access_token", "refresh_token", "authorization", "raw_payload"]
+    assert all(term not in serialized for term in forbidden_terms)
+
+
 def test_collect_endpoint_returns_sanitized_success(monkeypatch):
     def fake_collector():
         return {

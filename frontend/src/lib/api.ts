@@ -1,4 +1,6 @@
 import type {
+  BriefSuggestion,
+  BriefSuggestionsImportResponse,
   BlockedItem,
   BlockedItemCreate,
   BlockedItemUpdate,
@@ -63,6 +65,27 @@ export async function updateTopItem(id: number, payload: TopItemUpdate): Promise
   return request<TopItem>(`/api/top-items/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload)
+  });
+}
+
+export async function importBriefSuggestions(): Promise<BriefSuggestionsImportResponse> {
+  return request<BriefSuggestionsImportResponse>("/api/brief-suggestions/import", {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+}
+
+export async function acceptBriefSuggestion(id: number): Promise<TopItem> {
+  return request<TopItem>(`/api/brief-suggestions/${id}/accept`, {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+}
+
+export async function ignoreBriefSuggestion(id: number): Promise<BriefSuggestion> {
+  return request<BriefSuggestion>(`/api/brief-suggestions/${id}/ignore`, {
+    method: "POST",
+    body: JSON.stringify({})
   });
 }
 

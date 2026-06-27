@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from backend.app.db import (
     init_db,
     list_blocked_items,
+    list_brief_suggestions,
     list_projects,
     list_quick_captures,
     list_top_items_for_daily,
@@ -11,6 +12,7 @@ from backend.app.models import DailyDashboardResponse
 from backend.app.routes.collector_health import get_collector_health_items
 from backend.app.routes.serializers import (
     blocked_item_from_row,
+    brief_suggestion_from_row,
     project_from_row,
     quick_capture_from_row,
     today_prefix,
@@ -31,6 +33,10 @@ def daily_dashboard() -> DailyDashboardResponse:
         top_items=[
             top_item_from_row(row)
             for row in list_top_items_for_daily(today=today_prefix())
+        ],
+        brief_suggestions=[
+            brief_suggestion_from_row(row)
+            for row in list_brief_suggestions(statuses=("pending",), limit=10)
         ],
         blocked_items=[
             blocked_item_from_row(row)

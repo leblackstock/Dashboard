@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from backend.app.db import utc_now_iso
 from backend.app.models import (
     BlockedItem,
+    BriefSuggestion,
     CollectorHealthItem,
     Project,
     QuickCapture,
@@ -74,6 +75,27 @@ def top_item_from_row(row: dict) -> TopItem:
         created_at=row["created_at"],
         updated_at=row["updated_at"],
         completed_at=completed_at,
+    )
+
+
+def brief_suggestion_from_row(row: dict) -> BriefSuggestion:
+    return BriefSuggestion(
+        id=row["id"],
+        source=row["source"],
+        source_label=row["source_label"],
+        briefing_date=row["briefing_date"],
+        source_item_type=row["source_item_type"],
+        title=row["title"],
+        reason=row.get("reason"),
+        project_key=row.get("project_key"),
+        project_label=row.get("project_label"),
+        urgency=row.get("urgency"),
+        source_status=row.get("source_status"),
+        status=row["status"],
+        imported_at=row["imported_at"],
+        updated_at=row["updated_at"],
+        accepted_at=row.get("accepted_at"),
+        ignored_at=row.get("ignored_at"),
     )
 
 

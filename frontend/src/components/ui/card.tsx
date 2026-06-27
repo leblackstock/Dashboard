@@ -16,7 +16,14 @@ export function Card({ children, className = "" }: CardProps) {
 }
 
 export function CardHeader({ children, className = "" }: CardProps) {
-  return <div className={`border-b border-line px-5 py-4 ${className}`}>{children}</div>;
+  return (
+    <div
+      className={`border-b border-line px-5 py-4 ${className}`}
+      data-dashboard-drag-handle
+    >
+      {children}
+    </div>
+  );
 }
 
 export function CardContent({ children, className = "" }: CardProps) {

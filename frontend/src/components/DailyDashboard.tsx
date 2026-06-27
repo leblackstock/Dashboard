@@ -1,14 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, RotateCcw } from "lucide-react";
+import { useState } from "react";
 import { fetchDailyDashboard } from "../lib/api";
 import { ActiveProjectsCard } from "./ActiveProjectsCard";
 import { BlockedReviewCard } from "./BlockedReviewCard";
 import { CodexUsageCard } from "./CodexUsageCard";
 import { CollectorHealthCard } from "./CollectorHealthCard";
+import {
+  DASHBOARD_LAYOUT_STORAGE_KEY,
+  DEFAULT_DASHBOARD_CARD_ORDER,
+  DraggableDashboardGrid,
+  loadDashboardCardOrder,
+  saveDashboardCardOrder
+} from "./DraggableDashboardGrid";
 import { QuickCaptureCard } from "./QuickCaptureCard";
 import { TodaysTop3Card } from "./TodaysTop3Card";
 
 export function DailyDashboard() {
+  const [cardOrder, setCardOrder] = useState(loadDashboardCardOrder);
   const query = useQuery({
     queryKey: ["daily-dashboard"],
     queryFn: fetchDailyDashboard
@@ -16,9 +25,20 @@ export function DailyDashboard() {
 
   const projects = query.data?.projects ?? [];
   const topItems = query.data?.top_items ?? [];
+  const briefSuggestions = query.data?.brief_suggestions ?? [];
   const blockedItems = query.data?.blocked_items ?? [];
   const quickCaptures = query.data?.quick_captures ?? [];
   const collectorHealth = query.data?.collector_health ?? [];
+
+  function updateCardOrder(nextOrder: typeof cardOrder) {
+    setCardOrder(nextOrder);
+    saveDashboardCardOrder(nextOrder);
+  }
+
+  function resetCardOrder() {
+    window.localStorage.removeItem(DASHBOARD_LAYOUT_STORAGE_KEY);
+    setCardOrder([...DEFAULT_DASHBOARD_CARD_ORDER]);
+  }
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -29,16 +49,27 @@ export function DailyDashboard() {
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-ink">Daily Command Center</h1>
         </div>
-        <button
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-surface text-muted transition hover:border-cobalt hover:text-ink disabled:opacity-50"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-          type="button"
-          title="Refresh"
-          aria-label="Refresh"
-        >
-          <RefreshCcw className="h-4 w-4" aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-surface text-muted transition hover:border-cobalt hover:text-ink"
+            onClick={resetCardOrder}
+            type="button"
+            title="Reset dashboard layout"
+            aria-label="Reset dashboard layout"
+          >
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-surface text-muted transition hover:border-cobalt hover:text-ink disabled:opacity-50"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+            type="button"
+            title="Refresh"
+            aria-label="Refresh"
+          >
+            <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       {query.isLoading ? (
@@ -51,26 +82,42 @@ export function DailyDashboard() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-12">
-        <div className="xl:col-span-7">
-          <CodexUsageCard />
-        </div>
-        <div className="xl:col-span-5">
-          <TodaysTop3Card items={topItems} projects={projects} />
-        </div>
-        <div className="xl:col-span-4">
-          <ActiveProjectsCard projects={projects} />
-        </div>
-        <div className="xl:col-span-4">
-          <BlockedReviewCard items={blockedItems} projects={projects} />
-        </div>
-        <div className="xl:col-span-4">
-          <QuickCaptureCard captures={quickCaptures} projects={projects} />
-        </div>
-        <div className="xl:col-span-12">
-          <CollectorHealthCard collectors={collectorHealth} />
-        </div>
-      </div>
+      <DraggableDashboardGrid
+        cards={{
+          "codex-usage": {
+            label: "Codex Usage",
+            content: <CodexUsageCard />
+          },
+          "todays-top3": {
+            label: "Today’s Top 3",
+            content: (
+              <TodaysTop3Card
+                briefSuggestions={briefSuggestions}
+                items={topItems}
+                projects={projects}
+              />
+            )
+          },
+          "active-projects": {
+            label: "Active Projects",
+            content: <ActiveProjectsCard projects={projects} />
+          },
+          "blocked-review": {
+            label: "Blocked / Needs Review",
+            content: <BlockedReviewCard items={blockedItems} projects={projects} />
+          },
+          "quick-capture": {
+            label: "Quick Capture",
+            content: <QuickCaptureCard captures={quickCaptures} projects={projects} />
+          },
+          "collector-health": {
+            label: "Collector Health",
+            content: <CollectorHealthCard collectors={collectorHealth} />
+          }
+        }}
+        onOrderChange={updateCardOrder}
+        order={cardOrder}
+      />
     </div>
   );
 }

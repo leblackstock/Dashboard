@@ -41,6 +41,8 @@ class CodexCollectResponse(BaseModel):
 
 ProjectStatus = Literal["Active", "Paused", "Someday", "Archived", "Blocked", "Needs Review"]
 TopItemStatus = Literal["pending", "in_progress", "completed"]
+BriefSuggestionStatus = Literal["pending", "accepted", "ignored"]
+BriefSuggestionSourceItemType = Literal["priority", "next_action"]
 BlockedItemStatus = Literal["Blocked", "Needs Review", "Resolved"]
 
 
@@ -130,6 +132,44 @@ class TopItemsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     items: list[TopItem]
+
+
+class BriefSuggestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: int
+    source: Literal["woodcraft_brief_me"]
+    source_label: str
+    briefing_date: str
+    source_item_type: BriefSuggestionSourceItemType
+    title: str
+    reason: str | None
+    project_key: str | None
+    project_label: str | None = None
+    urgency: str | None
+    source_status: str | None
+    status: BriefSuggestionStatus
+    imported_at: str
+    updated_at: str
+    accepted_at: str | None
+    ignored_at: str | None
+
+
+class BriefSuggestionsResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    suggestions: list[BriefSuggestion]
+
+
+class BriefSuggestionsImportResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["success", "failed"]
+    imported: int
+    already_imported: int
+    skipped: int
+    safe_message: str
+    message: str
 
 
 class QuickCaptureCreate(BaseModel):
@@ -238,6 +278,7 @@ class DailyDashboardResponse(BaseModel):
 
     projects: list[Project]
     top_items: list[TopItem]
+    brief_suggestions: list[BriefSuggestion]
     blocked_items: list[BlockedItem]
     quick_captures: list[QuickCapture]
     collector_health: list[CollectorHealthItem]
