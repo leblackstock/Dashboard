@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, RefreshCcw, ShieldCheck, Zap } from "lucide-react";
-import { fetchCodexUsage } from "../lib/api";
+import { collectCodexUsage, fetchCodexUsage } from "../lib/api";
 import type { CodexUsageAccount, QuotaWindow } from "../lib/types";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -111,11 +111,28 @@ function AccountUsage({ account }: { account: CodexUsageAccount }) {
 }
 
 export function CodexUsageCard() {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["codex-usage"],
     queryFn: fetchCodexUsage
   });
+  const collectMutation = useMutation({
+    mutationFn: collectCodexUsage,
+    onSuccess: (result) => {
+      if (result.status === "success") {
+        void queryClient.invalidateQueries({ queryKey: ["codex-usage"] });
+      }
+      void queryClient.invalidateQueries({ queryKey: ["daily-dashboard"] });
+    }
+  });
   const account = query.data?.accounts[0];
+  const lastUpdated = collectMutation.data?.last_updated ?? account?.collected_at ?? null;
+  const collectFailed = collectMutation.data?.status === "failed" || collectMutation.isError;
+  const collectMessage = collectMutation.isPending
+    ? "Collecting…"
+    : collectMutation.isError
+      ? "Codex usage could not be refreshed. Try again later."
+      : collectMutation.data?.message;
 
   return (
     <Card className="w-full">
@@ -125,16 +142,36 @@ export function CodexUsageCard() {
           <h1 className="mt-1 text-xl font-semibold text-ink">Codex Usage</h1>
         </div>
         <button
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-surface text-muted transition hover:border-cobalt hover:text-ink"
-          onClick={() => void query.refetch()}
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 text-sm text-muted transition hover:border-cobalt hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={collectMutation.isPending}
+          onClick={() => collectMutation.mutate()}
           type="button"
-          title="Refresh"
-          aria-label="Refresh"
+          title="Refresh Codex Usage"
         >
-          <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+          <RefreshCcw
+            className={`h-4 w-4 ${collectMutation.isPending ? "animate-spin" : ""}`}
+            aria-hidden="true"
+          />
+          <span>Refresh Codex Usage</span>
         </button>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {collectMessage ? (
+            <span
+              className={`rounded-md border px-3 py-2 text-sm ${
+                collectFailed
+                  ? "border-red-400/40 bg-red-400/10 text-red-200"
+                  : collectMutation.isPending
+                    ? "border-amber/40 bg-amber/10 text-amber"
+                    : "border-mint/40 bg-mint/10 text-mint"
+              }`}
+            >
+              {collectMessage}
+            </span>
+          ) : null}
+          {lastUpdated ? <Badge tone="neutral">Last updated {formatDate(lastUpdated)}</Badge> : null}
+        </div>
         {query.isLoading ? (
           <p className="text-sm text-muted">Loading…</p>
         ) : query.isError ? (

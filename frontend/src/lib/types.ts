@@ -21,6 +21,15 @@ export type CodexUsageResponse = {
   accounts: CodexUsageAccount[];
 };
 
+export type CodexCollectResponse = {
+  status: "success" | "failed";
+  records_written: number;
+  collected_at: string | null;
+  last_updated: string | null;
+  safe_message: string;
+  message: string;
+};
+
 export type ProjectStatus =
   | "Active"
   | "Paused"

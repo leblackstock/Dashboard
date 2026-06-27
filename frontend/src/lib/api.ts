@@ -2,6 +2,7 @@ import type {
   BlockedItem,
   BlockedItemCreate,
   BlockedItemUpdate,
+  CodexCollectResponse,
   CodexUsageResponse,
   DailyDashboardResponse,
   Project,
@@ -31,6 +32,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export async function fetchCodexUsage(): Promise<CodexUsageResponse> {
   return request<CodexUsageResponse>("/api/ai/codex/live-usage");
+}
+
+export async function collectCodexUsage(): Promise<CodexCollectResponse> {
+  return request<CodexCollectResponse>("/api/ai/codex/collect", {
+    method: "POST",
+    body: JSON.stringify({})
+  });
 }
 
 export async function fetchDailyDashboard(): Promise<DailyDashboardResponse> {

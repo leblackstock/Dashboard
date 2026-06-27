@@ -28,6 +28,17 @@ class CodexUsageResponse(BaseModel):
     accounts: list[CodexUsageAccount]
 
 
+class CodexCollectResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["success", "failed"]
+    records_written: int
+    collected_at: str | None = None
+    last_updated: str | None = None
+    safe_message: str
+    message: str
+
+
 ProjectStatus = Literal["Active", "Paused", "Someday", "Archived", "Blocked", "Needs Review"]
 TopItemStatus = Literal["pending", "in_progress", "completed"]
 BlockedItemStatus = Literal["Blocked", "Needs Review", "Resolved"]

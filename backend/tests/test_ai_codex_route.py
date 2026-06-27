@@ -1,6 +1,7 @@
 from backend.app import db as db_module
 from backend.app.db import init_db, insert_usage_snapshot, upsert_account
-from backend.app.routes.ai_codex import get_live_usage_response
+from backend.app.routes import ai_codex
+from backend.app.routes.ai_codex import collect_usage, get_live_usage_response
 from backend.app.settings import get_settings
 
 
@@ -48,4 +49,55 @@ def test_api_response_contains_sanitized_shape(tmp_path, monkeypatch):
     assert response["accounts"][0]["quota_5h"]["used_percent"] == 34.5
     serialized = str(response).lower()
     forbidden_terms = ["access_token", "refresh_token", "authorization", "raw_payload"]
+    assert all(term not in serialized for term in forbidden_terms)
+
+
+def test_collect_endpoint_returns_sanitized_success(monkeypatch):
+    def fake_collector():
+        return {
+            "status": "success",
+            "records_written": 1,
+            "snapshot_file": "latest.json",
+            "collected_at": "2026-06-27T16:00:00+00:00",
+        }
+
+    monkeypatch.setattr(ai_codex, "collect_codex_live_usage", fake_collector)
+
+    response = collect_usage().model_dump()
+
+    assert response == {
+        "status": "success",
+        "records_written": 1,
+        "collected_at": "2026-06-27T16:00:00+00:00",
+        "last_updated": "2026-06-27T16:00:00+00:00",
+        "safe_message": "codex_usage_collected",
+        "message": "Codex usage refreshed.",
+    }
+    serialized = str(response).lower()
+    forbidden_terms = ["snapshot_file", "access_token", "authorization", "raw_payload"]
+    assert all(term not in serialized for term in forbidden_terms)
+
+
+def test_collect_endpoint_returns_safe_auth_failure(monkeypatch):
+    def fake_collector():
+        return {
+            "status": "failed",
+            "records_written": 0,
+            "safe_message": "auth_failed:codex_auth_not_found",
+        }
+
+    monkeypatch.setattr(ai_codex, "collect_codex_live_usage", fake_collector)
+
+    response = collect_usage().model_dump()
+
+    assert response == {
+        "status": "failed",
+        "records_written": 0,
+        "collected_at": None,
+        "last_updated": None,
+        "safe_message": "codex_auth_refresh_failed",
+        "message": "Codex usage could not be refreshed. Check local Codex auth.",
+    }
+    serialized = str(response).lower()
+    forbidden_terms = ["auth.json", "access_token", "refresh_token", "authorization"]
     assert all(term not in serialized for term in forbidden_terms)
