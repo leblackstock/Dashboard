@@ -39,6 +39,26 @@ tasks:
     cmds:
       - npx pnpm@9.15.9 build
 
+  dashboard:start:
+    desc: Start the local dashboard backend and frontend
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 start
+
+  dashboard:stop:
+    desc: Stop dashboard processes started by the supervisor
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 stop
+
+  dashboard:restart:
+    desc: Restart dashboard processes started by the supervisor
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 restart
+
+  dashboard:status:
+    desc: Show safe local dashboard process and health status
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 status
+
   test:
     desc: Run backend tests
     cmds:

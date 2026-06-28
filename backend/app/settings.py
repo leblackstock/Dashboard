@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True, extra="ignore")
 
     dashboard_db_path: Path = Field(default=Path("data/dashboard.db"), alias="DASHBOARD_DB_PATH")
     dashboard_sanitized_dir: Path = Field(
@@ -19,10 +19,7 @@ class Settings(BaseSettings):
         alias="DASHBOARD_CORS_ORIGINS",
     )
     codex_home: Path | None = Field(default=None, alias="CODEX_HOME")
-    woodcraft_brief_source: Path = Field(
-        default=Path("../Woodcraft/60_automation/workspace_maintenance/brief_latest.json"),
-        alias="WOODCRAFT_BRIEF_SOURCE",
-    )
+    woodcraft_brief_source: Path | None = Field(default=None, alias="WOODCRAFT_BRIEF_SOURCE")
 
     @property
     def cors_origins(self) -> list[str]:

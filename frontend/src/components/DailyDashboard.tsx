@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCcw, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchDailyDashboard } from "../lib/api";
 import { ActiveProjectsCard } from "./ActiveProjectsCard";
 import { BlockedReviewCard } from "./BlockedReviewCard";
@@ -18,6 +18,7 @@ import { TodaysTop3Card } from "./TodaysTop3Card";
 
 export function DailyDashboard() {
   const [cardOrder, setCardOrder] = useState(loadDashboardCardOrder);
+  const [layoutStatus, setLayoutStatus] = useState("");
   const query = useQuery({
     queryKey: ["daily-dashboard"],
     queryFn: fetchDailyDashboard
@@ -29,15 +30,27 @@ export function DailyDashboard() {
   const blockedItems = query.data?.blocked_items ?? [];
   const quickCaptures = query.data?.quick_captures ?? [];
   const collectorHealth = query.data?.collector_health ?? [];
+  const isDefaultLayout =
+    cardOrder.length === DEFAULT_DASHBOARD_CARD_ORDER.length &&
+    cardOrder.every((cardId, index) => cardId === DEFAULT_DASHBOARD_CARD_ORDER[index]);
+
+  useEffect(() => {
+    if (!layoutStatus) return;
+    const timeout = window.setTimeout(() => setLayoutStatus(""), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [layoutStatus]);
 
   function updateCardOrder(nextOrder: typeof cardOrder) {
     setCardOrder(nextOrder);
     saveDashboardCardOrder(nextOrder);
+    setLayoutStatus("");
   }
 
   function resetCardOrder() {
+    if (isDefaultLayout) return;
     window.localStorage.removeItem(DASHBOARD_LAYOUT_STORAGE_KEY);
     setCardOrder([...DEFAULT_DASHBOARD_CARD_ORDER]);
+    setLayoutStatus("Layout reset.");
   }
 
   return (
@@ -49,12 +62,16 @@ export function DailyDashboard() {
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-ink">Daily Command Center</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <span className="min-w-[76px] text-right text-xs text-muted" aria-live="polite">
+            {layoutStatus}
+          </span>
           <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-surface text-muted transition hover:border-cobalt hover:text-ink"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-surface text-muted transition hover:border-cobalt hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={isDefaultLayout}
             onClick={resetCardOrder}
             type="button"
-            title="Reset dashboard layout"
+            title={isDefaultLayout ? "Dashboard layout is already at default" : "Reset dashboard layout"}
             aria-label="Reset dashboard layout"
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />

@@ -223,7 +223,7 @@ export function CodexUsageCard() {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase text-muted">OpenAI</p>
           <h1 className="mt-1 text-xl font-semibold text-ink">Codex Usage</h1>

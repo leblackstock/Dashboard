@@ -19,6 +19,7 @@ frontend/.vite/
 frontend/*.tsbuildinfo
 
 # Local dashboard data
+.run/
 data/*.db
 data/**/*.db
 data/*.sqlite

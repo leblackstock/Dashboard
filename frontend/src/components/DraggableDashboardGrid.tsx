@@ -24,8 +24,13 @@ export function loadDashboardCardOrder(): DashboardCardId[] {
     return [...DEFAULT_DASHBOARD_CARD_ORDER];
   }
   try {
-    const stored = JSON.parse(window.localStorage.getItem(DASHBOARD_LAYOUT_STORAGE_KEY) ?? "[]");
+    const rawValue = window.localStorage.getItem(DASHBOARD_LAYOUT_STORAGE_KEY);
+    if (!rawValue) {
+      return [...DEFAULT_DASHBOARD_CARD_ORDER];
+    }
+    const stored = JSON.parse(rawValue);
     if (!Array.isArray(stored)) {
+      window.localStorage.removeItem(DASHBOARD_LAYOUT_STORAGE_KEY);
       return [...DEFAULT_DASHBOARD_CARD_ORDER];
     }
     const validIds = new Set<DashboardCardId>(DEFAULT_DASHBOARD_CARD_ORDER);
@@ -38,14 +43,22 @@ export function loadDashboardCardOrder(): DashboardCardId[] {
         normalized.push(cardId);
       }
     }
+    if (JSON.stringify(normalized) !== JSON.stringify(stored)) {
+      window.localStorage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(normalized));
+    }
     return normalized;
   } catch {
+    window.localStorage.removeItem(DASHBOARD_LAYOUT_STORAGE_KEY);
     return [...DEFAULT_DASHBOARD_CARD_ORDER];
   }
 }
 
 export function saveDashboardCardOrder(order: DashboardCardId[]) {
-  window.localStorage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(order));
+  try {
+    window.localStorage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(order));
+  } catch {
+    // The dashboard remains usable when browser storage is unavailable.
+  }
 }
 
 export function DraggableDashboardGrid({

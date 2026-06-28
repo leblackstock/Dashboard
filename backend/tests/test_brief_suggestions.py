@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from backend.app.db import (
     get_project,
@@ -8,7 +9,7 @@ from backend.app.db import (
 from backend.app.routes import brief_suggestions as route_module
 from backend.app.routes.daily import daily_dashboard
 from backend.app.services.woodcraft_brief import import_woodcraft_brief_suggestions
-from backend.app.settings import get_settings
+from backend.app.settings import Settings, get_settings
 
 FIXTURE = Path("backend/tests/fixtures/woodcraft_brief_latest.json")
 
@@ -67,6 +68,43 @@ def test_import_route_returns_safe_counts_and_daily_suggestions(tmp_path, monkey
     assert response["skipped"] == 0
     assert response["safe_message"] == "brief_suggestions_imported"
     assert len(daily["brief_suggestions"]) == 3
+
+
+def test_brief_source_defaults_to_not_configured(tmp_path, monkeypatch):
+    use_temp_db(tmp_path, monkeypatch)
+    assert Settings(_env_file=None).woodcraft_brief_source is None
+    monkeypatch.setattr(
+        route_module,
+        "get_settings",
+        lambda: SimpleNamespace(woodcraft_brief_source=None),
+    )
+
+    response = route_module.import_brief_suggestions().model_dump()
+
+    assert response == {
+        "status": "failed",
+        "imported": 0,
+        "already_imported": 0,
+        "skipped": 0,
+        "safe_message": "brief_source_not_configured",
+        "message": "Brief suggestions are not configured. Set the source in local settings.",
+    }
+    assert ":\\" not in str(response)
+
+
+def test_import_route_rejects_invalid_source_without_exposing_path(tmp_path, monkeypatch):
+    use_temp_db(tmp_path, monkeypatch)
+    invalid_source = tmp_path / "invalid_brief.json"
+    invalid_source.write_text('{"source":"unexpected"}', encoding="utf-8")
+    monkeypatch.setenv("WOODCRAFT_BRIEF_SOURCE", str(invalid_source))
+    get_settings.cache_clear()
+
+    response = route_module.import_brief_suggestions().model_dump()
+
+    assert response["status"] == "failed"
+    assert response["safe_message"] == "brief_source_invalid"
+    assert str(invalid_source) not in str(response)
+    assert ":\\" not in str(response)
 
 
 def test_accept_and_ignore_brief_suggestions(tmp_path, monkeypatch):

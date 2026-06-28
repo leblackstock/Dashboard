@@ -1,69 +1,60 @@
 # Dashboard Agent Instructions
 
-Current approved master spec: `dashboard_master_spec_v4.46.md`.
+Current project status reference: `dashboard_master_spec_v4.50.md`.
 
-If the root spec and `docs/dashboard_master_spec_v4.46.md` ever differ, use the newest approved master spec as authoritative.
+The v4.50 file may be supplied as an untracked local reference. Do not commit local-only master spec files unless explicitly asked. If approved specs differ, the newest approved spec is authoritative.
 
 ## Current Status
 
-Phase 1 is complete, pushed, and tagged:
+Published repository: `https://github.com/leblackstock/Dashboard`
 
-- Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Tag: `phase1-codex-usage-v0.1.0`
-- Commit: `f377a6937cb9f781700c74bf024f302f292fb1e4`
+- Current published commit: `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`
+- Brief/layout tag: `phase2-brief-suggestions-layout-v0.2.3`
+- Codex account-label tag: `phase2-codex-account-labels-v0.2.4`
 
-Phase 2 implementation is approved with the scope below.
+Current work is Phase 2.5: Daily Usability Polish.
 
-## Phase 2 Scope Lock
+## Phase 2.5 Scope Lock
 
-Implement Phase 2 only:
+In scope:
 
-- Daily Command Center v1.
-- Existing Codex Usage card carried forward.
-- Today’s Top 3, Active Projects, Blocked / Needs Review, Quick Capture, and Collector Health cards.
-- Project Registry v1.
-- Basic dark/glow frontend polish.
+- Native PowerShell start/stop/restart/status supervisor.
+- Thin optional Taskfile aliases.
+- Gitignored process state under `.run/`.
+- Optional local Woodcraft Brief source configured only through ignored `.env`.
+- Runbook and handoff updates.
+- Small layout reset, persistence, spacing, wrapping, and safe-message polish.
 
-Do not add Claude/ChatGPT collectors, best-AI-tool recommendations, Weekly/Monthly dashboards, draggable/resizable grids, calendar/email integrations, notifications, mobile/PWA polish, external hosting, multi-user auth, a scheduler/background collector, MCP tools, token proxy tools, autonomous memory, or a new database without explicit approval.
+Do not add a scheduler, autostart task, scheduled collector, new provider collector, recommendation/scoring feature, notification, calendar/email integration, hosting/auth feature, major UI redesign, new layout package, or new dependency without explicit approval.
 
-## Phase 2 Clarifications
-
-- Today’s Top 3 shows all non-completed items.
-- Today’s Top 3 also shows items completed today, collapsed/faded.
-- Today’s Top 3 hides items completed before today by default.
-- Do not add calendar/recurrence behavior in Phase 2.
-- Quick Capture raw text means user-entered local note/capture text only.
-- Quick Capture must not become an import path for raw logs, raw endpoint payloads, prompt history, auth files, rollout files, or pasted secret dumps.
-
-## Security Rules
+## Safety Rules
 
 Never print, log, export, store, commit, return from the API, or show in the frontend:
 
-- Access tokens.
-- Refresh tokens.
-- Cookies.
-- Authorization headers.
-- Auth file contents.
-- Raw endpoint payloads.
-- Prompt previews.
-- First user messages.
-- Raw logs.
-- Raw rollout files.
+- Access tokens or refresh tokens.
+- Cookies or authorization headers.
+- Auth file contents or raw endpoint payloads.
+- Prompt previews or first user messages.
+- Raw logs or rollout files.
 - Full workspace paths by default.
 
-Allowed outputs are sanitized snapshots, hashed account keys, local-only account labels, safe project labels, aggregate usage metrics, and freshness/confidence metadata.
+Allowed outputs are sanitized snapshots, hashed account keys, local-only account labels, safe project labels, aggregate usage metrics, freshness/confidence metadata, safe process status, and local service URLs.
 
 ## Commands
 
-- Backend setup: `task backend:sync`
-- Initialize DB: `task db:init`
-- Run collector manually: `task collector:codex`
-- Start backend: `task backend:dev`
-- Frontend setup: `task frontend:install`
-- Start frontend: `task frontend:dev`
-- Tests: `task test`
-- Lint: `task lint`
-- Secret scan: `task scan:secrets`
+Primary Windows lifecycle commands:
 
-Use `uv` for Python and pnpm for the frontend. Use `Taskfile.yml`, not `justfile`.
+- Start: `.\scripts\dashboard.ps1 start`
+- Stop: `.\scripts\dashboard.ps1 stop`
+- Restart: `.\scripts\dashboard.ps1 restart`
+- Status: `.\scripts\dashboard.ps1 status`
+
+Taskfile aliases are optional and must not be required:
+
+- `task dashboard:start`
+- `task dashboard:stop`
+- `task dashboard:restart`
+- `task dashboard:status`
+
+Existing setup and verification commands remain in `Taskfile.yml`. Use `uv` for Python and pnpm for the frontend. Use `Taskfile.yml`, not `justfile`.

@@ -48,3 +48,21 @@
 - Do not add calendar/recurrence behavior in Phase 2.
 - Quick Capture raw text means user-entered local note/capture text only.
 - Quick Capture must not become an import path for raw logs, raw endpoint payloads, prompt history, auth files, rollout files, or pasted secret dumps.
+
+## 2026-06-27 — Phase 2.3 And 2.4 Published Checkpoints
+
+- `phase2-brief-suggestions-layout-v0.2.3` points to `9cfa6c33345596f22820677326ee81ad9af177b5`.
+- `phase2-codex-account-labels-v0.2.4` points to `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`.
+- Current published `main` is `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`.
+- Brief Suggestions, flexible masonry layout, header dragging, persistence/reset, multi-account Codex usage, safe account labels, and quota reset clocks are published.
+
+## 2026-06-28 — Phase 2.5 Daily Usability Polish
+
+- Use `scripts/dashboard.ps1` as the primary Windows start/stop/restart/status supervisor.
+- Add Taskfile aliases, but do not require Task to be installed.
+- Store only validated PID/process-name/start-time state under gitignored `.run/`.
+- Never stop a process unless its saved identity is validated; occupied ports must fail safely.
+- Keep `WOODCRAFT_BRIEF_SOURCE` optional and blank in `.env.example`.
+- Store the real Brief path only in ignored local `.env`; never return or display it.
+- Keep the existing masonry layout and limit UI changes to reset, persistence, spacing, wrapping, and safe-message polish.
+- Do not add dependencies, scheduling/autostart, provider collectors, Phase 3 intelligence, integrations, hosting/auth, or a major redesign.

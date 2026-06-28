@@ -1,126 +1,149 @@
 # Dashboard Runbook
 
-Current approved master spec: `dashboard_master_spec_v4.46.md`.
+Current project status reference: `dashboard_master_spec_v4.50.md`.
 
-Published Phase 1 checkpoint:
+Published checkpoint:
 
 - Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Tag: `phase1-codex-usage-v0.1.0`
-- Commit: `f377a6937cb9f781700c74bf024f302f292fb1e4`
+- Commit: `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`
+- Tags: `phase2-brief-suggestions-layout-v0.2.3`, `phase2-codex-account-labels-v0.2.4`
 
-Phase 1 builds only this pipeline:
+Local-only master spec files are references and must not be committed unless explicitly approved.
 
-```txt
-Codex live usage collector
-→ sanitized JSON snapshot
-→ SQLite row
-→ FastAPI endpoint
-→ one frontend Codex Usage card
-```
+## Initial Setup
 
-## Setup
-
-The preferred command runner is Taskfile. If the `task` command is not installed, run the commands listed inside `Taskfile.yml` directly.
-
-Install Python dependencies:
+Install backend dependencies:
 
 ```powershell
-task backend:sync
+uv sync
 ```
 
 Install frontend dependencies:
 
 ```powershell
-task frontend:install
+Set-Location frontend
+npx pnpm@9.15.9 install
+Set-Location ..
 ```
 
-The Taskfile invokes a pinned pnpm runner through `npx` so the command works even when pnpm is not installed globally.
-
-## Initialize Database
+Initialize the local database:
 
 ```powershell
-task db:init
+uv run python -m backend.app.db --init
 ```
 
-The default database is `data/dashboard.db`. Generated database files are local-only and gitignored.
+Generated databases, snapshots, frontend builds, dependencies, logs, and process state are local-only and gitignored.
 
-## Run Collector Manually
+## Local Configuration
+
+Create local `.env` from `.env.example` only when `.env` does not already exist. Keep `.env` ignored.
+
+The Woodcraft Brief source is optional. To enable manual Brief Suggestions import, set this only in local `.env`:
+
+```dotenv
+WOODCRAFT_BRIEF_SOURCE=<local path to approved brief_latest.json>
+```
+
+Do not put tokens, cookies, authorization headers, auth contents, or raw payloads in `.env`. The configured Brief path is never returned by the API or shown in the frontend.
+
+## Daily Start
+
+The primary Windows command starts backend and frontend together:
 
 ```powershell
-task collector:codex
+.\scripts\dashboard.ps1 start
 ```
 
-The collector reads Codex auth in memory only, calls the live usage endpoint, writes a sanitized snapshot to `data/sanitized/codex/latest.json`, inserts sanitized rows into SQLite, and records a safe collector status.
+The supervisor:
 
-Do not enable scheduled collection until manual runs are verified safe.
+- Refuses to start when required ports are occupied.
+- Starts both services in the background.
+- Stores only process IDs, process names, and start times under gitignored `.run/`.
+- Verifies backend health, the Daily API, and the frontend before reporting success.
+- Never stops a process unless its saved identity is validated.
 
-## Start Backend
+Open:
+
+```txt
+http://127.0.0.1:5173/
+```
+
+## Status, Restart, And Stop
 
 ```powershell
-task backend:dev
+.\scripts\dashboard.ps1 status
+.\scripts\dashboard.ps1 restart
+.\scripts\dashboard.ps1 stop
 ```
 
-Health check:
+`stop` only targets validated process trees created by the supervisor. If a saved PID no longer matches, the script reports that it was not stopped.
+
+## Optional Taskfile Aliases
+
+When Task is installed, these aliases call the same PowerShell supervisor:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/health
+task dashboard:start
+task dashboard:status
+task dashboard:restart
+task dashboard:stop
 ```
 
-Codex usage endpoint:
+Task is optional. The direct PowerShell commands remain supported and authoritative.
+
+## Individual Development Commands
+
+Use these when foreground logs are needed for debugging:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/api/ai/codex/live-usage
+uv run uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
-
-## Start Frontend
 
 ```powershell
-task frontend:dev
+Set-Location frontend
+npx pnpm@9.15.9 dev -- --host 127.0.0.1 --port 5173
 ```
 
-Open the local Vite URL shown by pnpm. The first screen is the Daily dashboard. In Phase 1 it showed only the Codex Usage card; in Phase 2 it expands into `Daily Command Center v1`.
+Do not run the supervisor on the same ports while individual development servers are active.
+
+## Manual Collectors
+
+Codex usage remains manual:
+
+```powershell
+uv run python -m backend.collectors.collect_codex_live_usage
+```
+
+Woodcraft Brief Suggestions remain manual through `Refresh Brief Suggestions` in the UI. No scheduler or background collector is enabled.
+
+## Health Checks
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/api/health
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/api/daily
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5173/
+```
+
+Each should return HTTP `200` while the dashboard is running.
 
 ## Verification
 
-Run backend tests:
-
 ```powershell
-task test
+uv run pytest
+uv run ruff check .
+Set-Location frontend
+npx pnpm@9.15.9 build
+Set-Location ..
+gitleaks detect --source . --config .gitleaks.toml --no-git --redact
+git diff --check
 ```
 
-Run lint:
+Confirm that `.env`, `.run/`, generated databases, sanitized snapshots, `frontend/dist`, `frontend/node_modules`, `.venv`, logs, raw/debug data, and local-only specs remain untracked.
 
-```powershell
-task lint
-```
+## Safe Troubleshooting
 
-Build frontend:
-
-```powershell
-task frontend:build
-```
-
-Run a redacted secret scan:
-
-```powershell
-task scan:secrets
-```
-
-This requires Gitleaks to be installed on PATH. If it is unavailable, install Gitleaks before treating the secret-scan gate as complete.
-
-Confirm that no tokens, cookies, authorization headers, auth file contents, raw endpoint payloads, prompt previews, raw logs, or full workspace paths appear in console output, snapshots, SQLite, API responses, frontend props, docs, or committed files.
-
-## Startup Notes
-
-Phase 1 may use Windows Task Scheduler for the backend only after manual backend startup works. Do not add a scheduled collector until the manual collector is proven safe and explicitly approved.
-
-## Phase 2
-
-Phase 2 implementation is approved. See `docs/phase2_implementation_plan.md`.
-
-Phase 2 keeps the Codex collector manual and adds a local-first Daily dashboard with Codex Usage, Today’s Top 3, Active Projects, Blocked / Needs Review, Quick Capture, and Collector Health.
-
-Today’s Top 3 shows all non-completed items, also shows items completed today collapsed/faded, and hides items completed before today by default. Phase 2 does not add calendar or recurrence behavior.
-
-Quick Capture stores only user-entered local note/capture text. It must not ingest raw logs, raw endpoint payloads, prompt history, auth files, rollout files, or pasted secret dumps.
+- If startup reports an occupied port, stop the known process yourself or choose the correct existing development session. The supervisor will not kill it.
+- If status reports an unvalidated process, the supervisor will not stop it.
+- If Brief Suggestions are not configured, set the source in local `.env`; no path is returned in the API error.
+- Use the individual development commands when interactive logs are needed. Do not add persistent raw logging.

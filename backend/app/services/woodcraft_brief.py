@@ -27,7 +27,7 @@ class BriefImportError(Exception):
 
 def import_woodcraft_brief_suggestions(
     *,
-    source_path: Path,
+    source_path: Path | None,
 ) -> dict[str, int | str]:
     payload = _load_brief_payload(source_path)
     suggestions = _extract_suggestions(payload)
@@ -54,7 +54,9 @@ def import_woodcraft_brief_suggestions(
     }
 
 
-def _load_brief_payload(source_path: Path) -> dict[str, Any]:
+def _load_brief_payload(source_path: Path | None) -> dict[str, Any]:
+    if source_path is None:
+        raise BriefImportError("brief_source_not_configured")
     resolved = resolve_repo_path(source_path).resolve()
     if not resolved.is_file():
         raise BriefImportError("brief_source_not_available")

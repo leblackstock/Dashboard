@@ -128,6 +128,8 @@ def ignore_brief_suggestion(suggestion_id: int) -> BriefSuggestion:
 
 
 def public_import_safe_message(value: object) -> str:
+    if value == "brief_source_not_configured":
+        return "brief_source_not_configured"
     if value == "brief_source_not_available":
         return "brief_source_not_available"
     if value == "brief_source_invalid":
@@ -138,6 +140,8 @@ def public_import_safe_message(value: object) -> str:
 
 
 def public_import_user_message(safe_message: str) -> str:
+    if safe_message == "brief_source_not_configured":
+        return "Brief suggestions are not configured. Set the source in local settings."
     if safe_message == "brief_source_not_available":
         return "Brief suggestions could not be refreshed. Check local Brief Me export."
     if safe_message == "brief_source_invalid":

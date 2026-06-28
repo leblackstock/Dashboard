@@ -2,27 +2,42 @@
 
 ## Current Status
 
-Phase 1 implementation was built from `docs/phase1_codex_usage_pipeline_plan.md`.
+Current project status reference: `dashboard_master_spec_v4.50.md`.
 
-Phase 1 is complete, pushed, and tagged:
+Published repository state:
 
 - Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Tag: `phase1-codex-usage-v0.1.0`
-- Commit: `f377a6937cb9f781700c74bf024f302f292fb1e4`
+- Commit: `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`
+- Tag: `phase2-brief-suggestions-layout-v0.2.3`
+- Tag: `phase2-codex-account-labels-v0.2.4`
 
-Current approved master spec: `dashboard_master_spec_v4.46.md`.
+Phase 2.3/2.4 is complete and published. Current work is Phase 2.5: Daily Usability Polish.
 
-Current work is Phase 2 implementation. The approved target is `Daily Command Center v1`.
+## Phase 2.5 Scope
+
+- One-command native PowerShell startup for backend and frontend.
+- Safe start, stop, restart, and status behavior using gitignored process state.
+- Optional Taskfile aliases; Task must not be required.
+- Optional Woodcraft Brief source configured only in ignored `.env`.
+- Safe unconfigured/missing/invalid Brief responses with no local path exposure.
+- Small layout reset, persistence, spacing, wrapping, and status-message polish.
+- Runbook and decision updates.
+
+Do not add scheduling, autostart, provider collectors, recommendations/scoring, notifications, integrations, hosting/auth, major UI redesign, or new dependencies.
 
 ## Safety Reminder
 
-Do not print, store, commit, return, or render raw tokens, refresh tokens, cookies, authorization headers, auth file contents, raw endpoint payloads, prompt previews, raw logs, or full workspace paths.
+Do not print, store, commit, return, or render raw tokens, refresh tokens, cookies, authorization headers, auth contents, raw endpoint payloads, prompt previews, raw logs, rollout files, or full workspace paths.
 
-Quick Capture raw text means user-entered local note/capture text only. It must not become an import path for raw logs, raw endpoint payloads, prompt history, auth files, rollout files, or pasted secret dumps.
+Process state may contain only validated PIDs, process names, and start times. The supervisor must never stop unrelated processes.
 
-## Next Actions
+## Acceptance Gate
 
-1. Implement the approved Phase 2 plan in `docs/phase2_implementation_plan.md`.
-2. Keep Today’s Top 3 manual-first: show non-completed items, show items completed today collapsed/faded, and hide items completed before today by default.
-3. Do not add calendar/recurrence behavior, scheduled collectors, provider collectors, recommendation engines, or Phase 3 intelligence features.
+1. Exercise `start`, `status`, `restart`, and `stop`.
+2. Confirm health, Daily API, and frontend HTTP `200` responses.
+3. Confirm occupied ports are rejected without stopping their owners.
+4. Test unset, missing, invalid, and valid Brief configuration.
+5. Browser-test drag persistence, reset, Brief actions, forms, and Codex refresh.
+6. Run pytest, Ruff, frontend build, Gitleaks, `git diff --check`, and gitignore checks.
+7. Keep local `dashboard_master_spec_v4.50.md` uncommitted.

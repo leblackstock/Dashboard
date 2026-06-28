@@ -70,7 +70,9 @@ export function TodaysTop3Card({
 
   const importFailed = importMutation.isError || importMutation.data?.status === "failed";
   const importSummary = importMutation.data
-    ? `${importMutation.data.message} Imported ${importMutation.data.imported}, already imported ${importMutation.data.already_imported}, skipped ${importMutation.data.skipped}.`
+    ? importMutation.data.status === "success"
+      ? `${importMutation.data.message} Imported ${importMutation.data.imported}, already imported ${importMutation.data.already_imported}, skipped ${importMutation.data.skipped}.`
+      : importMutation.data.message
     : null;
 
   return (
