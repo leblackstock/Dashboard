@@ -66,3 +66,19 @@
 - Store the real Brief path only in ignored local `.env`; never return or display it.
 - Keep the existing masonry layout and limit UI changes to reset, persistence, spacing, wrapping, and safe-message polish.
 - Do not add dependencies, scheduling/autostart, provider collectors, Phase 3 intelligence, integrations, hosting/auth, or a major redesign.
+
+## 2026-06-28 — Phase 2.5 Published Checkpoint
+
+- `phase2-daily-usability-polish-v0.2.5` points to `eff205f490192c6e0a8f9c817495251a9d4e9419`.
+- Current published `main` is `eff205f490192c6e0a8f9c817495251a9d4e9419`.
+- Native PowerShell dashboard lifecycle commands, Taskfile aliases, safe local Brief configuration, runbook improvements, and small UI polish are published.
+
+## 2026-06-28 — Phase 2.6 Persistent Local Dashboard Runtime
+
+- Add one current-user Windows Scheduled Task named `Dashboard Local Runtime` using built-in PowerShell ScheduledTasks cmdlets.
+- Trigger the task at current-user logon with an interactive, limited-run-level principal; administrator privileges are not required.
+- The task action may only call `scripts/dashboard.ps1 start`; it must not run collectors or add AI automation.
+- Mark ownership with an exact description and refuse to overwrite or remove a same-name task without that marker.
+- Installing starts the task once for immediate verification. Uninstalling removes only the managed task and does not stop the dashboard.
+- Keep `.run/` as the only local process-state location and preserve PID, process-name, and start-time validation before stopping process trees.
+- Add no dependency, Windows service, NSSM integration, scheduled collector, or Phase 3 feature.

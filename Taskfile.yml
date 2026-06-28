@@ -59,6 +59,16 @@ tasks:
     cmds:
       - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 status
 
+  dashboard:install-task:
+    desc: Install current-user dashboard startup at Windows logon
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 install-task
+
+  dashboard:uninstall-task:
+    desc: Remove only the managed dashboard logon task
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dashboard.ps1 uninstall-task
+
   test:
     desc: Run backend tests
     cmds:

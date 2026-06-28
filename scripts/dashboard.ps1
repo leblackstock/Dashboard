@@ -1,6 +1,6 @@
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("start", "stop", "restart", "status")]
+    [ValidateSet("install-task", "uninstall-task", "start", "stop", "restart", "status")]
     [string]$Action = "status"
 )
 
@@ -12,6 +12,118 @@ $StateDirectory = Join-Path $RepoRoot ".run"
 $StatePath = Join-Path $StateDirectory "dashboard-processes.json"
 $BackendUrl = "http://127.0.0.1:8000"
 $FrontendUrl = "http://127.0.0.1:5173"
+$ScheduledTaskName = "Dashboard Local Runtime"
+$ScheduledTaskPath = "\"
+$ScheduledTaskDescription = "Managed by Dashboard scripts/dashboard.ps1. Starts the local web app only."
+$CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+
+function Get-DashboardScheduledTask {
+    return Get-ScheduledTask `
+        -TaskName $ScheduledTaskName `
+        -TaskPath $ScheduledTaskPath `
+        -ErrorAction SilentlyContinue
+}
+
+function Test-OwnedScheduledTask {
+    param([object]$Task)
+    return $null -ne $Task -and $Task.Description -eq $ScheduledTaskDescription
+}
+
+function Show-ScheduledTaskStatus {
+    $task = Get-DashboardScheduledTask
+    if ($null -eq $task) {
+        Write-Host "Login task: not installed."
+        return $true
+    }
+    if (-not (Test-OwnedScheduledTask -Task $task)) {
+        Write-Host "Login task: name conflict; the existing task is not managed by Dashboard."
+        return $false
+    }
+    Write-Host "Login task: installed ($($task.State))."
+    return $true
+}
+
+function Install-DashboardScheduledTask {
+    $existingTask = Get-DashboardScheduledTask
+    if ($null -ne $existingTask -and -not (Test-OwnedScheduledTask -Task $existingTask)) {
+        Write-Host "The dashboard task name is already used by an unrelated task. Nothing was changed."
+        return $false
+    }
+
+    try {
+        $scriptArguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$PSCommandPath`" start"
+        $taskAction = New-ScheduledTaskAction `
+            -Execute "powershell.exe" `
+            -Argument $scriptArguments `
+            -WorkingDirectory $RepoRoot
+        $taskTrigger = New-ScheduledTaskTrigger -AtLogOn -User $CurrentUser
+        $taskPrincipal = New-ScheduledTaskPrincipal `
+            -UserId $CurrentUser `
+            -LogonType Interactive `
+            -RunLevel Limited
+        $taskSettings = New-ScheduledTaskSettingsSet `
+            -AllowStartIfOnBatteries `
+            -DontStopIfGoingOnBatteries `
+            -StartWhenAvailable `
+            -MultipleInstances IgnoreNew `
+            -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
+        $taskDefinition = New-ScheduledTask `
+            -Action $taskAction `
+            -Trigger $taskTrigger `
+            -Principal $taskPrincipal `
+            -Settings $taskSettings `
+            -Description $ScheduledTaskDescription
+
+        Register-ScheduledTask `
+            -TaskName $ScheduledTaskName `
+            -TaskPath $ScheduledTaskPath `
+            -InputObject $taskDefinition `
+            -Force | Out-Null
+
+        Start-ScheduledTask -TaskName $ScheduledTaskName -TaskPath $ScheduledTaskPath
+        $backendReady = Wait-ForHttp -Uri "$BackendUrl/api/health"
+        $dailyReady = Wait-ForHttp -Uri "$BackendUrl/api/daily"
+        $frontendReady = Wait-ForHttp -Uri "$FrontendUrl/"
+
+        Write-Host "Dashboard login task installed for the current user."
+        Write-Host "Administrator privileges: not required."
+        if ($backendReady -and $dailyReady -and $frontendReady) {
+            Write-Host "Dashboard startup verification: OK"
+            return $true
+        }
+        Write-Host "The login task was installed, but the dashboard did not become healthy. Check dashboard status."
+        return $false
+    }
+    catch {
+        Write-Host "Dashboard login task installation failed. No unrelated tasks were changed."
+        return $false
+    }
+}
+
+function Uninstall-DashboardScheduledTask {
+    $task = Get-DashboardScheduledTask
+    if ($null -eq $task) {
+        Write-Host "Dashboard login task is already uninstalled."
+        return $true
+    }
+    if (-not (Test-OwnedScheduledTask -Task $task)) {
+        Write-Host "The matching task name is not managed by Dashboard and was not removed."
+        return $false
+    }
+
+    try {
+        Unregister-ScheduledTask `
+            -TaskName $ScheduledTaskName `
+            -TaskPath $ScheduledTaskPath `
+            -Confirm:$false
+        Write-Host "Dashboard login task uninstalled. Running dashboard processes were not changed."
+        return $true
+    }
+    catch {
+        Write-Host "Dashboard login task could not be uninstalled. No unrelated tasks were changed."
+        return $false
+    }
+}
 
 function Get-DashboardState {
     if (-not (Test-Path -LiteralPath $StatePath)) {
@@ -123,10 +235,11 @@ function Stop-OwnedProcess {
 }
 
 function Show-DashboardStatus {
+    $scheduledTaskHealthy = Show-ScheduledTaskStatus
     $state = Get-DashboardState
     if ($null -eq $state) {
         Write-Host "Dashboard status: stopped."
-        return $true
+        return $scheduledTaskHealthy
     }
 
     $backend = Get-ValidatedProcess -Entry (Get-StateEntry -State $state -Name "backend")
@@ -140,7 +253,7 @@ function Show-DashboardStatus {
     Write-Host "Frontend: $(if ($frontendHealthy) { 'running' } else { 'stopped or unhealthy' })"
     if ($backendHealthy -and $dailyHealthy -and $frontendHealthy) {
         Write-Host "Dashboard URL: $FrontendUrl/"
-        return $true
+        return $scheduledTaskHealthy
     }
     return $false
 }
@@ -264,6 +377,8 @@ function Start-Dashboard {
 }
 
 $succeeded = switch ($Action) {
+    "install-task" { Install-DashboardScheduledTask }
+    "uninstall-task" { Uninstall-DashboardScheduledTask }
     "start" { Start-Dashboard }
     "stop" { Stop-Dashboard }
     "restart" {

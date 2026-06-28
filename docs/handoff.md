@@ -8,23 +8,21 @@ Published repository state:
 
 - Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Commit: `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`
-- Tag: `phase2-brief-suggestions-layout-v0.2.3`
-- Tag: `phase2-codex-account-labels-v0.2.4`
+- Commit: `eff205f490192c6e0a8f9c817495251a9d4e9419`
+- Tag: `phase2-daily-usability-polish-v0.2.5`
 
-Phase 2.3/2.4 is complete and published. Current work is Phase 2.5: Daily Usability Polish.
+Phase 2.5 is complete and published. Current local work is Phase 2.6: Persistent Local Dashboard Runtime.
 
-## Phase 2.5 Scope
+## Phase 2.6 Scope
 
-- One-command native PowerShell startup for backend and frontend.
-- Safe start, stop, restart, and status behavior using gitignored process state.
-- Optional Taskfile aliases; Task must not be required.
-- Optional Woodcraft Brief source configured only in ignored `.env`.
-- Safe unconfigured/missing/invalid Brief responses with no local path exposure.
-- Small layout reset, persistence, spacing, wrapping, and status-message polish.
-- Runbook and decision updates.
+- Install or uninstall one owned current-user Windows Scheduled Task for dashboard startup at logon.
+- Keep manual start, stop, restart, and status behavior intact.
+- Start the local web app only; do not schedule collectors or AI work.
+- Use only built-in PowerShell and Windows Task Scheduler support.
+- Add optional Taskfile aliases while keeping direct PowerShell commands authoritative.
+- Document manual startup, login startup, removal, status, and occupied-port troubleshooting.
 
-Do not add scheduling, autostart, provider collectors, recommendations/scoring, notifications, integrations, hosting/auth, major UI redesign, or new dependencies.
+Do not add scheduled collectors, provider collectors, recommendations/scoring, notifications, integrations, hosting/auth, major UI redesign, a Windows service, NSSM, or new dependencies.
 
 ## Safety Reminder
 
@@ -34,10 +32,9 @@ Process state may contain only validated PIDs, process names, and start times. T
 
 ## Acceptance Gate
 
-1. Exercise `start`, `status`, `restart`, and `stop`.
+1. Exercise `install-task`, `status`, `stop`, `start`, `restart`, and `uninstall-task`.
 2. Confirm health, Daily API, and frontend HTTP `200` responses.
-3. Confirm occupied ports are rejected without stopping their owners.
-4. Test unset, missing, invalid, and valid Brief configuration.
-5. Browser-test drag persistence, reset, Brief actions, forms, and Codex refresh.
-6. Run pytest, Ruff, frontend build, Gitleaks, `git diff --check`, and gitignore checks.
-7. Keep local `dashboard_master_spec_v4.50.md` uncommitted.
+3. Confirm install/uninstall changes only the exact owned task and succeeds without elevation.
+4. Confirm stopping does not terminate unrelated listeners and occupied ports fail safely.
+5. Run pytest, Ruff, frontend build, Gitleaks, `git diff --check`, and gitignore checks.
+6. Keep local-only master spec references uncommitted.

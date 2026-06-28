@@ -6,8 +6,8 @@ Published checkpoint:
 
 - Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Commit: `7549e9d0cf508b131a0220e9981ada3b4e9b67d1`
-- Tags: `phase2-brief-suggestions-layout-v0.2.3`, `phase2-codex-account-labels-v0.2.4`
+- Commit: `eff205f490192c6e0a8f9c817495251a9d4e9419`
+- Tag: `phase2-daily-usability-polish-v0.2.5`
 
 Local-only master spec files are references and must not be committed unless explicitly approved.
 
@@ -79,6 +79,30 @@ http://127.0.0.1:5173/
 
 `stop` only targets validated process trees created by the supervisor. If a saved PID no longer matches, the script reports that it was not stopped.
 
+## Start Automatically At Login
+
+Install one current-user Windows Scheduled Task:
+
+```powershell
+.\scripts\dashboard.ps1 install-task
+```
+
+The task runs `dashboard.ps1 start` at the current user's logon and starts it once immediately after installation. It uses the current user's interactive token at the limited run level, so administrator privileges are not required. It starts only the local dashboard web app; collectors remain manual.
+
+Check both the login task and current dashboard health:
+
+```powershell
+.\scripts\dashboard.ps1 status
+```
+
+Remove automatic login startup:
+
+```powershell
+.\scripts\dashboard.ps1 uninstall-task
+```
+
+Uninstall removes only the exactly named task carrying the Dashboard ownership marker. It does not stop a currently running dashboard. Use `stop` separately when needed.
+
 ## Optional Taskfile Aliases
 
 When Task is installed, these aliases call the same PowerShell supervisor:
@@ -88,6 +112,8 @@ task dashboard:start
 task dashboard:status
 task dashboard:restart
 task dashboard:stop
+task dashboard:install-task
+task dashboard:uninstall-task
 ```
 
 Task is optional. The direct PowerShell commands remain supported and authoritative.
@@ -145,5 +171,8 @@ Confirm that `.env`, `.run/`, generated databases, sanitized snapshots, `fronten
 
 - If startup reports an occupied port, stop the known process yourself or choose the correct existing development session. The supervisor will not kill it.
 - If status reports an unvalidated process, the supervisor will not stop it.
+- If task installation reports a name conflict, inspect the existing Windows task yourself. The script will not overwrite or remove a task without its exact Dashboard ownership marker.
+- If the login task is installed but startup is unhealthy, run `status`, resolve any occupied port or missing prerequisite, then run `restart`.
+- Uninstalling login startup leaves a currently running dashboard alone; run `stop` when you also want to close it.
 - If Brief Suggestions are not configured, set the source in local `.env`; no path is returned in the API error.
 - Use the individual development commands when interactive logs are needed. Do not add persistent raw logging.
