@@ -40,7 +40,8 @@ class CodexCollectResponse(BaseModel):
 
 
 ProjectStatus = Literal["Active", "Paused", "Someday", "Archived", "Blocked", "Needs Review"]
-TopItemStatus = Literal["pending", "in_progress", "completed"]
+TopItemStatus = Literal["active", "queued", "completed", "removed"]
+TopItemPlacement = Literal["active", "queued"]
 BriefSuggestionStatus = Literal["pending", "accepted", "ignored"]
 BriefSuggestionSourceItemType = Literal["priority", "next_action"]
 BlockedItemStatus = Literal["Blocked", "Needs Review", "Resolved"]
@@ -95,9 +96,6 @@ class TopItemCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     project_key: str | None = Field(default=None, max_length=80)
     reason: str | None = Field(default=None, max_length=500)
-    status: TopItemStatus = "pending"
-    sort_order: int = 0
-    pinned: bool = False
 
 
 class TopItemUpdate(BaseModel):
@@ -106,8 +104,7 @@ class TopItemUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     project_key: str | None = Field(default=None, max_length=80)
     reason: str | None = Field(default=None, max_length=500)
-    status: TopItemStatus | None = None
-    sort_order: int | None = None
+    status: Literal["completed"] | None = None
     pinned: bool | None = None
 
 
@@ -122,6 +119,10 @@ class TopItem(BaseModel):
     status: TopItemStatus
     sort_order: int
     pinned: bool
+    source: str | None
+    source_suggestion_key: str | None
+    source_item_type: BriefSuggestionSourceItemType | None
+    source_label: str | None
     display_state: Literal["normal", "completed_today"]
     created_at: str
     updated_at: str
@@ -132,6 +133,21 @@ class TopItemsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     items: list[TopItem]
+
+
+class TopItemPlacementResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    item: TopItem
+    placement: TopItemPlacement
+    safe_message: str
+    message: str
+
+
+class TopItemReorderRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    item_ids: list[int] = Field(min_length=1, max_length=3)
 
 
 class BriefSuggestion(BaseModel):

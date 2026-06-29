@@ -29,7 +29,7 @@ def test_top_items_show_open_and_today_completed_only(tmp_path, monkeypatch):
     db_path = use_temp_db(tmp_path, monkeypatch)
     today = db_module.utc_now_iso().split("T", maxsplit=1)[0]
 
-    create_top_item({"title": "Keep working", "status": "pending"}, db_path=db_path)
+    create_top_item({"title": "Keep working", "status": "active"}, db_path=db_path)
     create_top_item(
         {
             "title": "Finished today",
@@ -95,7 +95,7 @@ def test_collector_health_reports_latest_safe_status(tmp_path, monkeypatch):
 
 def test_daily_dashboard_returns_phase2_card_data(tmp_path, monkeypatch):
     db_path = use_temp_db(tmp_path, monkeypatch)
-    create_top_item({"title": "Plan the day", "status": "pending"}, db_path=db_path)
+    create_top_item({"title": "Plan the day", "status": "active"}, db_path=db_path)
     create_blocked_item({"title": "Needs review", "status": "Needs Review"}, db_path=db_path)
     create_quick_capture({"text": "Local idea only"}, db_path=db_path)
 

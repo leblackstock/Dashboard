@@ -13,6 +13,8 @@ import type {
   QuickCaptureCreate,
   TopItem,
   TopItemCreate,
+  TopItemPlacementResponse,
+  TopItemsResponse,
   TopItemUpdate
 } from "./types";
 
@@ -27,9 +29,27 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
   });
   if (!response.ok) {
-    throw new Error("dashboard_api_request_failed");
+    let safeCode = "dashboard_api_request_failed";
+    try {
+      const payload = (await response.json()) as { detail?: unknown };
+      if (
+        typeof payload.detail === "string" &&
+        /^[a-z0-9_]+$/.test(payload.detail)
+      ) {
+        safeCode = payload.detail;
+      }
+    } catch {
+      // Keep the generic safe code when the response is not JSON.
+    }
+    throw new DashboardApiError(safeCode);
   }
   return (await response.json()) as T;
+}
+
+export class DashboardApiError extends Error {
+  constructor(public readonly safeCode: string) {
+    super("dashboard_api_request_failed");
+  }
 }
 
 export async function fetchCodexUsage(): Promise<CodexUsageResponse> {
@@ -54,10 +74,40 @@ export async function createProject(payload: ProjectCreate): Promise<Project> {
   });
 }
 
-export async function createTopItem(payload: TopItemCreate): Promise<TopItem> {
-  return request<TopItem>("/api/top-items", {
+export async function createTopItem(
+  payload: TopItemCreate
+): Promise<TopItemPlacementResponse> {
+  return request<TopItemPlacementResponse>("/api/top-items", {
     method: "POST",
     body: JSON.stringify(payload)
+  });
+}
+
+export async function reorderTopItems(itemIds: number[]): Promise<TopItemsResponse> {
+  return request<TopItemsResponse>("/api/top-items/reorder", {
+    method: "PUT",
+    body: JSON.stringify({ item_ids: itemIds })
+  });
+}
+
+export async function promoteTopItem(id: number): Promise<TopItemPlacementResponse> {
+  return request<TopItemPlacementResponse>(`/api/top-items/${id}/promote`, {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+}
+
+export async function removeTopItem(id: number): Promise<TopItem> {
+  return request<TopItem>(`/api/top-items/${id}/remove`, {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+}
+
+export async function returnTopItemToSuggestions(id: number): Promise<TopItem> {
+  return request<TopItem>(`/api/top-items/${id}/return-to-suggestions`, {
+    method: "POST",
+    body: JSON.stringify({})
   });
 }
 
@@ -75,8 +125,10 @@ export async function importBriefSuggestions(): Promise<BriefSuggestionsImportRe
   });
 }
 
-export async function acceptBriefSuggestion(id: number): Promise<TopItem> {
-  return request<TopItem>(`/api/brief-suggestions/${id}/accept`, {
+export async function acceptBriefSuggestion(
+  id: number
+): Promise<TopItemPlacementResponse> {
+  return request<TopItemPlacementResponse>(`/api/brief-suggestions/${id}/accept`, {
     method: "POST",
     body: JSON.stringify({})
   });

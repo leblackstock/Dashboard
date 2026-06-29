@@ -50,7 +50,7 @@ export type Project = {
   updated_at: string;
 };
 
-export type TopItemStatus = "pending" | "in_progress" | "completed";
+export type TopItemStatus = "active" | "queued" | "completed" | "removed";
 
 export type TopItem = {
   id: number;
@@ -61,6 +61,10 @@ export type TopItem = {
   status: TopItemStatus;
   sort_order: number;
   pinned: boolean;
+  source: string | null;
+  source_suggestion_key: string | null;
+  source_item_type: "priority" | "next_action" | null;
+  source_label: string | null;
   display_state: "normal" | "completed_today";
   created_at: string;
   updated_at: string;
@@ -155,17 +159,26 @@ export type TopItemCreate = {
   title: string;
   project_key?: string | null;
   reason?: string | null;
-  status?: TopItemStatus;
 };
 
 export type TopItemUpdate = Partial<{
   title: string;
   project_key: string | null;
   reason: string | null;
-  status: TopItemStatus;
-  sort_order: number;
+  status: "completed";
   pinned: boolean;
 }>;
+
+export type TopItemPlacementResponse = {
+  item: TopItem;
+  placement: "active" | "queued";
+  safe_message: string;
+  message: string;
+};
+
+export type TopItemsResponse = {
+  items: TopItem[];
+};
 
 export type QuickCaptureCreate = {
   text: string;

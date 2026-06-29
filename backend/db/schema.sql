@@ -74,10 +74,14 @@ CREATE TABLE IF NOT EXISTS daily_top_items (
   title TEXT NOT NULL,
   project_key TEXT,
   reason TEXT,
-  status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'in_progress', 'completed')),
+  status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'queued', 'completed', 'removed')),
   sort_order INTEGER NOT NULL DEFAULT 0,
   pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),
+  source TEXT,
+  source_suggestion_key TEXT,
+  source_item_type TEXT,
+  source_label TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   completed_at TEXT,
@@ -89,6 +93,29 @@ CREATE INDEX IF NOT EXISTS idx_daily_top_items_status_sort
 
 CREATE INDEX IF NOT EXISTS idx_daily_top_items_completed_at
   ON daily_top_items(completed_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_top_items_source_suggestion_key
+  ON daily_top_items(source_suggestion_key)
+  WHERE source_suggestion_key IS NOT NULL;
+
+CREATE TRIGGER IF NOT EXISTS trg_daily_top_items_active_limit_insert
+BEFORE INSERT ON daily_top_items
+WHEN
+  NEW.status = 'active'
+  AND (SELECT COUNT(*) FROM daily_top_items WHERE status = 'active') >= 3
+BEGIN
+  SELECT RAISE(ABORT, 'daily_top_items_active_limit');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_daily_top_items_active_limit_update
+BEFORE UPDATE OF status ON daily_top_items
+WHEN
+  NEW.status = 'active'
+  AND OLD.status != 'active'
+  AND (SELECT COUNT(*) FROM daily_top_items WHERE status = 'active') >= 3
+BEGIN
+  SELECT RAISE(ABORT, 'daily_top_items_active_limit');
+END;
 
 CREATE TABLE IF NOT EXISTS brief_suggestions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

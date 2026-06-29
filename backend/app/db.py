@@ -10,6 +10,9 @@ from backend.app.settings import get_settings
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = REPO_ROOT / "backend" / "db" / "schema.sql"
+PHASE_2_7_MIGRATION_PATH = (
+    REPO_ROOT / "backend" / "db" / "migrations" / "phase_2_7_top_items.sql"
+)
 
 
 def utc_now_iso() -> str:
@@ -49,8 +52,42 @@ def init_db(db_path: Path | None = None) -> Path:
     resolved = get_db_path(db_path)
     schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
     with connect(resolved) as connection:
+        _migrate_phase_2_7_top_items(connection)
         connection.executescript(schema_sql)
     return resolved
+
+
+def _migrate_phase_2_7_top_items(connection: sqlite3.Connection) -> None:
+    table = connection.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'daily_top_items'"
+    ).fetchone()
+    if table is None:
+        return
+
+    columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(daily_top_items)").fetchall()
+    }
+    if "source_suggestion_key" in columns:
+        return
+
+    brief_table = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'brief_suggestions'"
+    ).fetchone()
+    if brief_table is None:
+        raise RuntimeError("phase_2_7_brief_suggestions_table_missing")
+
+    migration_sql = PHASE_2_7_MIGRATION_PATH.read_text(encoding="utf-8")
+    connection.execute("PRAGMA foreign_keys = OFF")
+    try:
+        connection.executescript(f"BEGIN IMMEDIATE;\n{migration_sql}\nCOMMIT;")
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.execute("PRAGMA foreign_keys = ON")
+
+    if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
+        raise RuntimeError("phase_2_7_foreign_key_check_failed")
 
 
 def upsert_account(
@@ -324,12 +361,22 @@ def list_top_items_for_daily(
             LEFT JOIN projects AS p
               ON p.project_key = t.project_key
             WHERE
-              t.status != 'completed'
+              t.status IN ('active', 'queued')
               OR (
+                t.status = 'completed'
+                AND
                 t.completed_at IS NOT NULL
                 AND substr(t.completed_at, 1, 10) = ?
               )
-            ORDER BY t.pinned DESC, t.sort_order ASC, t.created_at ASC, t.id ASC
+            ORDER BY
+              CASE t.status
+                WHEN 'active' THEN 0
+                WHEN 'queued' THEN 1
+                ELSE 2
+              END,
+              t.sort_order ASC,
+              t.created_at ASC,
+              t.id ASC
             """,
             (today,),
         ).fetchall()
@@ -364,17 +411,22 @@ def create_top_item(item: dict[str, Any], *, db_path: Path | None = None) -> dic
             """
             INSERT INTO daily_top_items (
               title, project_key, reason, status, sort_order, pinned,
+              source, source_suggestion_key, source_item_type, source_label,
               created_at, updated_at, completed_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item["title"],
                 item.get("project_key"),
                 item.get("reason"),
-                item.get("status", "pending"),
+                item.get("status", "active"),
                 item.get("sort_order", 0),
                 1 if item.get("pinned", False) else 0,
+                item.get("source"),
+                item.get("source_suggestion_key"),
+                item.get("source_item_type"),
+                item.get("source_label"),
                 now,
                 now,
                 completed_at,
@@ -401,6 +453,10 @@ def update_top_item(
         "sort_order",
         "pinned",
         "completed_at",
+        "source",
+        "source_suggestion_key",
+        "source_item_type",
+        "source_label",
     }
     selected_updates = {key: value for key, value in updates.items() if key in allowed_fields}
     if not selected_updates:
@@ -408,7 +464,7 @@ def update_top_item(
 
     if selected_updates.get("status") == "completed" and "completed_at" not in selected_updates:
         selected_updates["completed_at"] = utc_now_iso()
-    if selected_updates.get("status") in {"pending", "in_progress"}:
+    if selected_updates.get("status") in {"active", "queued", "removed"}:
         selected_updates["completed_at"] = None
     if "pinned" in selected_updates:
         selected_updates["pinned"] = 1 if selected_updates["pinned"] else 0

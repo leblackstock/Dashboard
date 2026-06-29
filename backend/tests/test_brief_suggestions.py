@@ -112,13 +112,16 @@ def test_accept_and_ignore_brief_suggestions(tmp_path, monkeypatch):
     import_woodcraft_brief_suggestions(source_path=FIXTURE)
     suggestions = route_module.brief_suggestions().model_dump()["suggestions"]
 
-    accepted = route_module.accept_brief_suggestion(suggestions[0]["id"]).model_dump()
+    accepted_result = route_module.accept_brief_suggestion(suggestions[0]["id"]).model_dump()
+    accepted = accepted_result["item"]
     ignored = route_module.ignore_brief_suggestion(suggestions[1]["id"]).model_dump()
     remaining = route_module.brief_suggestions().model_dump()["suggestions"]
 
     assert accepted["title"] == suggestions[0]["title"]
     assert accepted["pinned"] is False
-    assert accepted["status"] == "pending"
+    assert accepted["status"] == "active"
+    assert accepted_result["placement"] == "active"
+    assert accepted["source_suggestion_key"]
     assert ignored["status"] == "ignored"
     assert suggestions[0]["id"] not in {item["id"] for item in remaining}
     assert suggestions[1]["id"] not in {item["id"] for item in remaining}

@@ -1,11 +1,7 @@
-import sqlite3
-
 from fastapi import APIRouter, HTTPException
 
 from backend.app.db import (
-    create_top_item,
     get_brief_suggestion,
-    get_top_item,
     init_db,
     list_brief_suggestions,
     update_brief_suggestion,
@@ -15,9 +11,11 @@ from backend.app.models import (
     BriefSuggestion,
     BriefSuggestionsImportResponse,
     BriefSuggestionsResponse,
-    TopItem,
+    TopItemPlacementResponse,
 )
-from backend.app.routes.serializers import brief_suggestion_from_row, top_item_from_row
+from backend.app.routes.serializers import brief_suggestion_from_row
+from backend.app.routes.top_items import placement_response, raise_workflow_error
+from backend.app.services.top_items import TopItemWorkflowError, accept_brief_priority
 from backend.app.services.woodcraft_brief import (
     BriefImportError,
     import_woodcraft_brief_suggestions,
@@ -66,45 +64,14 @@ def import_brief_suggestions() -> BriefSuggestionsImportResponse:
     )
 
 
-@router.post("/{suggestion_id}/accept", response_model=TopItem)
-def accept_brief_suggestion(suggestion_id: int) -> TopItem:
+@router.post("/{suggestion_id}/accept", response_model=TopItemPlacementResponse)
+def accept_brief_suggestion(suggestion_id: int) -> TopItemPlacementResponse:
     init_db()
-    suggestion = get_brief_suggestion(suggestion_id)
-    if suggestion is None:
-        raise HTTPException(status_code=404, detail="brief_suggestion_not_found")
-    if suggestion["status"] == "accepted":
-        accepted_id = suggestion.get("accepted_top_item_id")
-        if accepted_id:
-            existing = get_top_item(int(accepted_id))
-            if existing is not None:
-                return top_item_from_row(existing)
-        raise HTTPException(status_code=409, detail="brief_suggestion_already_accepted")
-    if suggestion["status"] == "ignored":
-        raise HTTPException(status_code=409, detail="brief_suggestion_ignored")
-
     try:
-        top_item = create_top_item(
-            {
-                "title": suggestion["title"],
-                "project_key": suggestion.get("project_key"),
-                "reason": suggestion.get("reason"),
-                "status": "pending",
-                "pinned": False,
-            }
-        )
-    except sqlite3.IntegrityError as exc:
-        raise HTTPException(status_code=400, detail="brief_suggestion_not_accepted") from exc
-
-    update_brief_suggestion(
-        suggestion_id,
-        {
-            "status": "accepted",
-            "accepted_top_item_id": top_item["id"],
-            "accepted_at": utc_now_iso(),
-            "ignored_at": None,
-        },
-    )
-    return top_item_from_row(top_item)
+        top_item, placement = accept_brief_priority(suggestion_id)
+    except TopItemWorkflowError as exc:
+        raise_workflow_error(exc)
+    return placement_response(top_item, placement)
 
 
 @router.post("/{suggestion_id}/ignore", response_model=BriefSuggestion)
