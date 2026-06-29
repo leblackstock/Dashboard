@@ -8,7 +8,7 @@ type CardProps = {
 export function Card({ children, className = "" }: CardProps) {
   return (
     <section
-      className={`rounded-lg border border-line bg-panel shadow-xl shadow-black/20 ${className}`}
+      className={`dashboard-card-shell rounded-lg ${className}`}
     >
       {children}
     </section>
@@ -18,7 +18,7 @@ export function Card({ children, className = "" }: CardProps) {
 export function CardHeader({ children, className = "" }: CardProps) {
   return (
     <div
-      className={`border-b border-line px-5 py-4 ${className}`}
+      className={`dashboard-card-header border-b border-line/70 px-5 py-4 ${className}`}
       data-dashboard-drag-handle
     >
       {children}

@@ -19,8 +19,8 @@ export function DashboardCard({
   return (
     <Card className={`min-h-[260px] ${className}`}>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-        <div>
-          {eyebrow ? <p className="text-xs font-medium uppercase text-muted">{eyebrow}</p> : null}
+        <div className="min-w-0">
+          {eyebrow ? <p className="text-xs font-medium uppercase text-cobalt">{eyebrow}</p> : null}
           <h2 className="mt-1 text-lg font-semibold text-ink">{title}</h2>
         </div>
         {action}

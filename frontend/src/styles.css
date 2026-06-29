@@ -52,6 +52,45 @@ body {
     linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%);
 }
 
+.dashboard-card-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(var(--border-rgb) / 0.72);
+  background:
+    linear-gradient(180deg, rgb(var(--surface-hover-rgb) / 0.72), rgb(var(--surface-rgb) / 0.68));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 24px 60px rgb(0 0 0 / 0.28),
+    0 0 48px rgb(var(--accent-primary-rgb) / 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-card-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      135deg,
+      rgb(var(--accent-primary-rgb) / 0.16),
+      rgb(var(--accent-secondary-rgb) / 0.1) 42%,
+      transparent 72%
+    );
+  opacity: 0.72;
+}
+
+.dashboard-card-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-card-header {
+  background:
+    linear-gradient(180deg, rgb(var(--text-rgb) / 0.035), rgb(var(--surface-rgb) / 0));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
 button {
   font: inherit;
 }
