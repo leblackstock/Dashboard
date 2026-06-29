@@ -82,3 +82,11 @@
 - Installing starts the task once for immediate verification. Uninstalling removes only the managed task and does not stop the dashboard.
 - Keep `.run/` as the only local process-state location and preserve PID, process-name, and start-time validation before stopping process trees.
 - Add no dependency, Windows service, NSSM integration, scheduled collector, or Phase 3 feature.
+
+## 2026-06-29 — Master Spec v4.52 Replacement
+
+- `dashboard_master_spec_v4.52.md` is the active approved master spec.
+- It replaces `dashboard_master_spec_v4.46.md` at both the repository root and under `docs/`.
+- Replaced master spec files may be removed instead of retained alongside the active spec.
+- Phase 2.6 is published at `b3d1c805f45f587135fac3b93e29d1db8ca58f1f` with tag `phase2-persistent-dashboard-runtime-v0.2.6`.
+- Phase 2.7 Top 3 Priority Controls is approved for implementation after this documentation alignment commit.

@@ -1,7 +1,7 @@
-# Dashboard Master Spec v4.46
+# Dashboard Master Spec v4.52
 
 Created: 2026-06-26
-Previous version: v4.45
+Previous version: v4.51
 
 ## Core Concept
 
@@ -1481,7 +1481,7 @@ dashboard/
     scan_repos/
   src/
   docs/
-    dashboard_master_spec_v4.46.md
+    dashboard_master_spec_v4.52.md
 ```
 
 ## Example AI Subscription Limits JSON
@@ -1595,7 +1595,7 @@ dashboard/
     raw/
     sanitized/
   docs/
-    dashboard_master_spec_v4.46.md
+    dashboard_master_spec_v4.52.md
 ```
 
 First collector:
@@ -2595,7 +2595,7 @@ dashboard/
     sanitized/
       codex/
   docs/
-    dashboard_master_spec_v4.46.md
+    dashboard_master_spec_v4.52.md
 ```
 
 Rules:
@@ -3528,6 +3528,132 @@ For Phase 2 and Phase 3:
 Plan deeply enough to avoid rework, but implement narrowly enough that every slice can be tested and accepted.
 
 
+## Phase 2 Published Checkpoint
+
+Phase 2 has been pushed and tagged on GitHub.
+
+Repository:
+
+```txt
+https://github.com/leblackstock/Dashboard
+```
+
+Published branch:
+- `main`
+
+Published tag:
+- `phase2-daily-command-center-v0.2.0`
+
+Final commit on `main`:
+
+```txt
+1923aea6344fcf525a9ff1a9382273b092741a77
+```
+
+Tag target hash:
+
+```txt
+1923aea6344fcf525a9ff1a9382273b092741a77
+```
+
+Push result:
+
+```txt
+f377a69..1923aea  main -> main
+```
+
+Final status:
+- local `main` and `origin/main` are aligned.
+- ahead/behind is `0 0`.
+- `git status --short` is empty.
+- untracked `dashboard_master_spec_v4.47.md` was removed before pushing.
+- Phase 2 is now a stable published checkpoint.
+
+Current note:
+- If the browser shows `127.0.0.1 refused to connect`, the local frontend dev server is not currently running. Start the backend and frontend dev servers again before testing the UI.
+
+
+## Phase 2 Implementation Status
+
+Phase 2 implementation has been reported as running locally, but it is not yet accepted, committed, pushed, or tagged.
+
+Local services reported:
+- Frontend: `http://127.0.0.1:5173/`
+- Backend: `http://127.0.0.1:8000`
+
+Implemented:
+- v4.46 repo/doc alignment in:
+  - `AGENTS.md`
+  - `docs/runbook.md`
+  - `docs/decisions.md`
+  - `docs/handoff.md`
+  - `docs/phase2_implementation_plan.md`
+- Phase 2 SQLite schema in `backend/db/schema.sql`
+- Phase 2 API routes for:
+  - Daily
+  - Projects
+  - Top 3
+  - Blocked
+  - Quick Capture
+  - Collector Health
+- Daily dashboard shell plus:
+  - Codex Usage
+  - Today’s Top 3
+  - Active Projects
+  - Blocked / Needs Review
+  - Quick Capture
+  - Collector Health
+- Approved Top 3 rule:
+  - open items show
+  - items completed today show faded/collapsed
+  - older completed items hidden by default
+  - no calendar/recurrence behavior
+- Approved Quick Capture boundary:
+  - local user-entered capture text only
+  - backend rejects unsafe dump-like inputs
+
+Reported verification:
+- `uv run pytest` passed: `9 passed`
+- `uv run ruff check .` passed
+- frontend build passed
+- `/api/health` passed
+- `/api/daily` passed
+- frontend dev server served `200`
+- generated artifact gitignore check passed for:
+  - DB
+  - sanitized JSON
+  - dist
+  - node_modules
+  - `.venv`
+  - logs/raw/debug
+  - `.env`
+  - tsbuildinfo
+- mojibake scan clean
+
+Current blocker:
+- official configured Gitleaks command did not run because `task` and `gitleaks` were not installed on PATH in that environment.
+- equivalent local pattern scan found no secret values, but this does not replace the final official secret scan gate.
+- working tree is not clean because Phase 2 implementation is unstaged.
+- no commit or push has been made.
+
+Required before approval/commit:
+1. Produce a full `git status --short`.
+2. Produce a staged/untracked file summary.
+3. Run an official Gitleaks scan using the repo-approved command, or install/locate Gitleaks and run an equivalent official scan.
+4. Confirm the v4.41 spec deletions and v4.46 spec additions are intentional and correct.
+5. Confirm generated/local artifacts are still ignored.
+6. Re-run:
+   - `uv run pytest`
+   - `uv run ruff check .`
+   - frontend build
+   - official Gitleaks scan
+7. Only then commit Phase 2 locally.
+8. Do not push/tag Phase 2 until Lauren approves the final commit report.
+
+Suggested eventual Phase 2 tag:
+- `phase2-daily-command-center-v0.2.0`
+
+
 ## Final Prep Before Phase 2 Plan
 
 Before asking Codex to create the Phase 2 implementation plan, lock these planning defaults so Codex does not reopen basic decisions.
@@ -4453,3 +4579,192 @@ Rules:
 - Do not store raw tokens or authorization headers.
 - `account_key_hash` is canonical for grouping multiple subscriptions.
 - `account_label` is for local display only.
+
+
+## Phase 2.2 Published Checkpoint
+
+The Codex quota display fix has been pushed and tagged.
+
+Repository:
+
+```txt
+https://github.com/leblackstock/Dashboard
+```
+
+Published branch:
+- `main`
+
+Published tag:
+- `phase2-codex-quota-display-v0.2.2`
+
+Final commit on `main`:
+
+```txt
+7b4e10c7b87822bd1dc4e36978167666af8adf37
+```
+
+Tag target hash:
+
+```txt
+7b4e10c7b87822bd1dc4e36978167666af8adf37
+```
+
+Push result:
+
+```txt
+af57468..7b4e10c
+```
+
+Final status:
+- local `main` and `origin/main` are aligned.
+- `git status` is clean.
+
+Patch summary:
+- Fixed Codex 5-hour and weekly quota display.
+- Mapper now handles second-based `rate_limit.primary_window` and `rate_limit.secondary_window` fields with Unix reset timestamps.
+- Frontend shows real quota used/left/reset values when available.
+- Missing quota fields show clear safe fallback labels instead of dash placeholders.
+
+
+## Phase 2.3 and 2.4 Published Checkpoints
+
+The Brief Suggestions / flexible layout work and Codex account label work have been pushed and tagged.
+
+Repository:
+
+```txt
+https://github.com/leblackstock/Dashboard
+```
+
+Published branch:
+- `main`
+
+Final commit on `main`:
+
+```txt
+7549e9d0cf508b131a0220e9981ada3b4e9b67d1
+```
+
+Published tags:
+
+```txt
+phase2-brief-suggestions-layout-v0.2.3 -> 9cfa6c33345596f22820677326ee81ad9af177b5
+phase2-codex-account-labels-v0.2.4 -> 7549e9d0cf508b131a0220e9981ada3b4e9b67d1
+```
+
+Final status:
+- local `main` and `origin/main` are aligned.
+- remote sync is `0 behind / 0 ahead`.
+- `git status` is clean.
+- local `dashboard_master_spec_v4.49.md` was moved outside the repo and was not committed.
+
+v0.2.3 summary:
+- Added Woodcraft Brief-to-Top-3 Suggestions.
+- Added `Suggested from Brief`.
+- Added `Refresh Brief Suggestions`.
+- Added `Add to Top 3` / `Ignore`.
+- Added flexible draggable dashboard layout.
+- Added title/header drag behavior.
+- Added layout persistence and reset.
+
+v0.2.4 summary:
+- Improved Codex account labels.
+- Safely derives sanitized labels from live usage or local auth metadata.
+- Selector buttons use account names only when available.
+- Full emails, tokens, raw auth/ID-token contents, authorization data, and full local paths are not persisted or returned.
+- Codex quota reset display includes relative reset time and Eastern Time clock reset time.
+
+
+## Phase 2.5 Published Checkpoint
+
+The Daily Usability Polish work has been pushed and tagged.
+
+Repository:
+
+```txt
+https://github.com/leblackstock/Dashboard
+```
+
+Published branch:
+- `main`
+
+Published tag:
+
+```txt
+phase2-daily-usability-polish-v0.2.5
+```
+
+Final commit on `main`:
+
+```txt
+eff205f490192c6e0a8f9c817495251a9d4e9419
+```
+
+Tag target hash:
+
+```txt
+eff205f490192c6e0a8f9c817495251a9d4e9419
+```
+
+Push result:
+- `main` pushed from `7549e9d` to `eff205f`
+
+Final status:
+- local `main` and `origin/main` are aligned.
+- remote sync is `0 behind / 0 ahead`.
+- `git status` is clean.
+- local `dashboard_master_spec_v4.50.md` was moved outside the repo and was not committed.
+
+v0.2.5 summary:
+- Added PowerShell dashboard startup helper.
+- Added Taskfile aliases for dashboard lifecycle commands.
+- Added safe Woodcraft brief path configuration behavior.
+- Improved runbook/docs/handoff decisions.
+- Improved layout reset/persistence polish.
+- Preserved existing Codex usage, Brief Suggestions, Top 3, draggable layout, and dashboard workflows.
+
+
+## Phase 2.6 Published Checkpoint
+
+The Persistent Local Dashboard Runtime work has been pushed and tagged.
+
+Repository:
+
+```txt
+https://github.com/leblackstock/Dashboard
+```
+
+Published branch:
+- `main`
+
+Published tag:
+
+```txt
+phase2-persistent-dashboard-runtime-v0.2.6
+```
+
+Final commit on `main`:
+
+```txt
+b3d1c805f45f587135fac3b93e29d1db8ca58f1f
+```
+
+Tag target hash:
+
+```txt
+b3d1c805f45f587135fac3b93e29d1db8ca58f1f
+```
+
+Final status:
+- local `main` and `origin/main` are aligned.
+- remote sync is `0 behind / 0 ahead`.
+- `git status` is clean.
+- local `dashboard_master_spec_v4.51.md` was moved outside the repo and was not committed.
+
+v0.2.6 summary:
+- Added persistent local dashboard runtime support.
+- Added Windows Task Scheduler install/uninstall support through `scripts/dashboard.ps1`.
+- Added lifecycle commands for start/stop/restart/status.
+- No administrator privileges or new dependencies were required.
+- Persistent runtime keeps the dashboard running independently of a Codex chat/session.
+- Dashboard runtime remains separate from scheduled collectors or background AI usage collection.

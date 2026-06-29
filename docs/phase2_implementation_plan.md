@@ -1,6 +1,6 @@
 # Phase 2 Implementation Plan
 
-Current master spec: `dashboard_master_spec_v4.46.md`
+Current master spec: `dashboard_master_spec_v4.52.md`
 
 Phase 1 is complete, pushed, and tagged at `phase1-codex-usage-v0.1.0`.
 
@@ -318,7 +318,7 @@ Expected frontend changes:
 Expected docs/config changes:
 
 - `AGENTS.md`
-- `docs/dashboard_master_spec_v4.46.md`
+- `docs/dashboard_master_spec_v4.52.md`
 - `docs/handoff.md`
 - `docs/decisions.md`
 - `docs/runbook.md`

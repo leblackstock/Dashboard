@@ -1,6 +1,6 @@
 # Phase 1 Codex Usage Pipeline Plan
 
-Current master spec: `dashboard_master_spec_v4.46.md`
+Current master spec: `dashboard_master_spec_v4.52.md`
 
 Approved decisions have been applied to this plan. Do not start coding until a separate implementation request is given.
 
@@ -227,7 +227,7 @@ Expected files to create or modify:
 - `docs/decisions.md`
 - `docs/handoff.md`
 - `docs/phase1_quick_start.md`
-- `docs/dashboard_master_spec_v4.46.md`
+- `docs/dashboard_master_spec_v4.52.md`
 
 Generated/local-only, gitignored:
 

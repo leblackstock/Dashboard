@@ -1,13 +1,13 @@
 # Dashboard Runbook
 
-Current project status reference: `dashboard_master_spec_v4.50.md`.
+Current project status reference: `dashboard_master_spec_v4.52.md`.
 
 Published checkpoint:
 
 - Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Commit: `eff205f490192c6e0a8f9c817495251a9d4e9419`
-- Tag: `phase2-daily-usability-polish-v0.2.5`
+- Commit: `b3d1c805f45f587135fac3b93e29d1db8ca58f1f`
+- Tag: `phase2-persistent-dashboard-runtime-v0.2.6`
 
 Local-only master spec files are references and must not be committed unless explicitly approved.
 

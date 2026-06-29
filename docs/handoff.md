@@ -2,27 +2,28 @@
 
 ## Current Status
 
-Current project status reference: `dashboard_master_spec_v4.50.md`.
+Current project status reference: `dashboard_master_spec_v4.52.md`.
 
 Published repository state:
 
 - Repo: `https://github.com/leblackstock/Dashboard`
 - Branch: `main`
-- Commit: `eff205f490192c6e0a8f9c817495251a9d4e9419`
-- Tag: `phase2-daily-usability-polish-v0.2.5`
+- Commit: `b3d1c805f45f587135fac3b93e29d1db8ca58f1f`
+- Tag: `phase2-persistent-dashboard-runtime-v0.2.6`
 
-Phase 2.5 is complete and published. Current local work is Phase 2.6: Persistent Local Dashboard Runtime.
+Phase 2.6 is complete and published. Current work is Phase 2.7: Top 3 Priority Controls.
 
-## Phase 2.6 Scope
+## Phase 2.7 Scope
 
-- Install or uninstall one owned current-user Windows Scheduled Task for dashboard startup at logon.
-- Keep manual start, stop, restart, and status behavior intact.
-- Start the local web app only; do not schedule collectors or AI work.
-- Use only built-in PowerShell and Windows Task Scheduler support.
-- Add optional Taskfile aliases while keeping direct PowerShell commands authoritative.
-- Document manual startup, login startup, removal, status, and occupied-port troubleshooting.
+- Enforce no more than three active Today’s Top 3 items.
+- Route manual and accepted Brief overflow to a collapsed Priority Queue.
+- Keep queue promotion manual and reject promotion while active Top 3 is full.
+- Persist active item ordering with `sort_order`.
+- Support Remove from Today without completion/deletion.
+- Support Return to Suggestions only for Brief-linked items.
+- Preserve Brief dedupe across accepted, queued, completed, removed, and ignored states.
 
-Do not add scheduled collectors, provider collectors, recommendations/scoring, notifications, integrations, hosting/auth, major UI redesign, a Windows service, NSSM, or new dependencies.
+Do not add delete/trash behavior, scheduled collectors, provider collectors, Phase 3 recommendations/scoring, notifications, integrations, hosting/auth, a major redesign, or new dependencies.
 
 ## Safety Reminder
 
@@ -32,9 +33,8 @@ Process state may contain only validated PIDs, process names, and start times. T
 
 ## Acceptance Gate
 
-1. Exercise `install-task`, `status`, `stop`, `start`, `restart`, and `uninstall-task`.
-2. Confirm health, Daily API, and frontend HTTP `200` responses.
-3. Confirm install/uninstall changes only the exact owned task and succeeds without elevation.
-4. Confirm stopping does not terminate unrelated listeners and occupied ports fail safely.
+1. Test manual and Brief acceptance below and at the three-active-item limit.
+2. Test collapsed queue, manual promotion, remove, return, and Brief dedupe.
+3. Test active item drag/reorder persistence and refresh/reload persistence.
+4. Confirm `/api/daily` remains sanitized and removed items stay hidden.
 5. Run pytest, Ruff, frontend build, Gitleaks, `git diff --check`, and gitignore checks.
-6. Keep local-only master spec references uncommitted.
