@@ -184,6 +184,7 @@ class BriefSuggestionsImportResponse(BaseModel):
     imported: int
     already_imported: int
     skipped: int
+    duplicates_hidden: int
     safe_message: str
     message: str
 

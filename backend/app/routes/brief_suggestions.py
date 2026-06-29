@@ -50,6 +50,7 @@ def import_brief_suggestions() -> BriefSuggestionsImportResponse:
             imported=0,
             already_imported=0,
             skipped=0,
+            duplicates_hidden=0,
             safe_message=safe_message,
             message=public_import_user_message(safe_message),
         )
@@ -59,6 +60,7 @@ def import_brief_suggestions() -> BriefSuggestionsImportResponse:
         imported=int(result["imported"]),
         already_imported=int(result["already_imported"]),
         skipped=int(result["skipped"]),
+        duplicates_hidden=int(result["duplicates_hidden"]),
         safe_message="brief_suggestions_imported",
         message="Brief suggestions refreshed.",
     )

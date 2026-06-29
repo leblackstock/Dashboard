@@ -4,9 +4,11 @@ import re
 from pathlib import Path
 from typing import Any
 
+from backend.app.brief_dedupe import normalized_brief_action_key
 from backend.app.db import (
     ensure_project,
     get_project,
+    hide_duplicate_pending_brief_suggestions,
     insert_brief_suggestion,
     resolve_repo_path,
 )
@@ -35,21 +37,30 @@ def import_woodcraft_brief_suggestions(
     imported = 0
     already_imported = 0
     skipped = 0
+    current_action_keys: set[str] = set()
+    current_suggestion_keys: set[str] = set()
 
     for suggestion in suggestions:
         if suggestion is None:
             skipped += 1
             continue
+        current_action_keys.add(normalized_brief_action_key(suggestion))
+        current_suggestion_keys.add(suggestion["suggestion_key"])
         if insert_brief_suggestion(suggestion):
             imported += 1
         else:
             already_imported += 1
+    duplicates_hidden = hide_duplicate_pending_brief_suggestions(
+        current_action_keys=current_action_keys,
+        current_suggestion_keys=current_suggestion_keys
+    )
 
     return {
         "status": "success",
         "imported": imported,
         "already_imported": already_imported,
         "skipped": skipped,
+        "duplicates_hidden": duplicates_hidden,
         "safe_message": "brief_suggestions_imported",
     }
 

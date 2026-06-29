@@ -1,11 +1,13 @@
 import argparse
 import sqlite3
+from collections import defaultdict
 from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from backend.app.brief_dedupe import normalized_brief_action_key
 from backend.app.settings import get_settings
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -487,6 +489,7 @@ def list_brief_suggestions(
     db_path: Path | None = None,
 ) -> list[dict[str, Any]]:
     limit = max(1, min(limit, 100))
+    fetch_limit = 100 if statuses == ("pending",) else limit
     with connect(db_path) as connection:
         if statuses:
             placeholders = ", ".join("?" for _ in statuses)
@@ -502,7 +505,7 @@ def list_brief_suggestions(
                 ORDER BY s.imported_at DESC, s.id DESC
                 LIMIT ?
                 """,
-                (*statuses, limit),
+                (*statuses, fetch_limit),
             ).fetchall()
         else:
             rows = connection.execute(
@@ -516,9 +519,24 @@ def list_brief_suggestions(
                 ORDER BY s.imported_at DESC, s.id DESC
                 LIMIT ?
                 """,
-                (limit,),
+                (fetch_limit,),
             ).fetchall()
-    return [row_to_dict(row) for row in rows]
+    selected_rows = [row_to_dict(row) for row in rows]
+    if statuses == ("pending",):
+        selected_rows = _dedupe_pending_brief_rows(selected_rows)
+    return selected_rows[:limit]
+
+
+def _dedupe_pending_brief_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in rows:
+        key = normalized_brief_action_key(row)
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(row)
+    return selected
 
 
 def get_brief_suggestion(
@@ -582,6 +600,77 @@ def insert_brief_suggestion(
             ),
         )
     return True
+
+
+def hide_duplicate_pending_brief_suggestions(
+    *,
+    current_action_keys: set[str] | None = None,
+    current_suggestion_keys: set[str] | None = None,
+    db_path: Path | None = None,
+) -> int:
+    current_actions = current_action_keys
+    current_keys = current_suggestion_keys or set()
+    with connect(db_path) as connection:
+        rows = [
+            row_to_dict(row)
+            for row in connection.execute(
+                """
+                SELECT
+                  id, suggestion_key, source, title, project_key, status,
+                  source_status, imported_at, updated_at
+                FROM brief_suggestions
+                WHERE source = 'woodcraft_brief_me'
+                ORDER BY imported_at DESC, id DESC
+                """
+            ).fetchall()
+        ]
+
+        pending_by_action: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        handled_actions: set[str] = set()
+        for row in rows:
+            action_key = normalized_brief_action_key(row)
+            if row["status"] == "pending":
+                pending_by_action[action_key].append(row)
+            elif row["status"] == "accepted" or (
+                row["status"] == "ignored" and row.get("source_status") != "duplicate_hidden"
+            ):
+                handled_actions.add(action_key)
+
+        hide_ids: list[int] = []
+        for action_key, pending_rows in pending_by_action.items():
+            if current_actions is not None and action_key not in current_actions:
+                hide_ids.extend(int(row["id"]) for row in pending_rows)
+                continue
+            if action_key in handled_actions:
+                hide_ids.extend(int(row["id"]) for row in pending_rows)
+                continue
+
+            current_rows = [
+                row for row in pending_rows if row["suggestion_key"] in current_keys
+            ]
+            canonical = current_rows[0] if current_rows else pending_rows[0]
+            hide_ids.extend(
+                int(row["id"]) for row in pending_rows if row["id"] != canonical["id"]
+            )
+
+        if not hide_ids:
+            return 0
+
+        now = utc_now_iso()
+        placeholders = ", ".join("?" for _ in hide_ids)
+        connection.execute(
+            f"""
+            UPDATE brief_suggestions
+            SET
+              status = 'ignored',
+              source_status = 'duplicate_hidden',
+              ignored_at = ?,
+              updated_at = ?
+            WHERE id IN ({placeholders}) AND status = 'pending'
+            """,
+            (now, now, *hide_ids),
+        )
+        return len(hide_ids)
 
 
 def update_brief_suggestion(

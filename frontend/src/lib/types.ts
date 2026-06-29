@@ -95,6 +95,7 @@ export type BriefSuggestionsImportResponse = {
   imported: number;
   already_imported: number;
   skipped: number;
+  duplicates_hidden: number;
   safe_message: string;
   message: string;
 };
