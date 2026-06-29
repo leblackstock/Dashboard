@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpCircle,
+  CalendarMinus,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  CircleMinus,
   GripVertical,
   Plus,
   RefreshCcw,
-  RotateCcw,
+  Undo2,
   XCircle
 } from "lucide-react";
 import {
@@ -37,7 +37,7 @@ import { Badge } from "./ui/badge";
 
 const PRIORITY_QUEUE_STORAGE_KEY = "dashboard.priority-queue.expanded.v1";
 const inputClass =
-  "w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition placeholder:text-muted focus:border-cobalt";
+  "w-full rounded-md border border-line/70 bg-surface/60 px-3 py-2 text-sm text-ink shadow-inner shadow-black/20 outline-none transition placeholder:text-muted focus:border-cobalt focus:bg-surface-hover/80 focus:ring-2 focus:ring-cobalt/25";
 
 function sortPriorities(items: TopItem[]) {
   return [...items].sort(
@@ -316,7 +316,7 @@ export function TodaysTop3Card({
             ))}
           </select>
           <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-cobalt/50 bg-cobalt/15 text-ink transition hover:bg-cobalt/25 disabled:opacity-50"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-cobalt/50 bg-cobalt/15 text-ink shadow-[0_0_18px_rgb(var(--accent-primary-rgb)_/_0.12)] transition hover:bg-cobalt/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/50 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={createMutation.isPending}
             type="submit"
             title="Add"
@@ -339,11 +339,13 @@ export function TodaysTop3Card({
         ) : null}
 
         <section aria-labelledby="active-top-three-heading" data-testid="active-top-three">
-          <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-cobalt/20 bg-cobalt/5 px-3 py-2 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.035)]">
             <p id="active-top-three-heading" className="text-sm font-medium text-ink">
               Active Top 3
             </p>
-            <span className="text-xs text-muted">{activeItems.length} of 3</span>
+            <span className="rounded-full border border-cobalt/30 bg-cobalt/10 px-2 py-1 text-xs font-medium text-cobalt">
+              {activeItems.length} of 3
+            </span>
           </div>
           <div className="space-y-2">
             {activeItems.length === 0 ? (
@@ -376,7 +378,7 @@ export function TodaysTop3Card({
           <section className="space-y-2" aria-label="Completed today">
             {completedToday.map((item) => (
               <div
-                className="rounded-md border border-line bg-surface p-3 opacity-55"
+                className="rounded-lg border border-line/55 bg-surface/35 p-3 opacity-60"
                 key={item.id}
               >
                 <p className="break-words text-sm font-medium text-ink line-through">
@@ -393,14 +395,22 @@ export function TodaysTop3Card({
           </section>
         ) : null}
 
-        <section className="border-t border-line pt-3" data-testid="priority-queue">
+        <section
+          className="rounded-lg border border-line/55 bg-surface/20 px-3 py-2"
+          data-testid="priority-queue"
+        >
           <button
-            className="flex w-full items-center justify-between gap-3 rounded-md px-1 py-2 text-left text-sm font-medium text-ink transition hover:text-cobalt"
+            className="flex w-full items-center justify-between gap-3 rounded-md py-1.5 text-left text-sm font-medium text-muted transition hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/45"
             onClick={toggleQueue}
             type="button"
             aria-expanded={queueExpanded}
           >
-            <span>Priority Queue · {queuedItems.length} waiting</span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span>Priority Queue</span>
+              <span className="rounded-full border border-line/60 bg-surface/45 px-2 py-0.5 text-xs font-medium text-muted">
+                {queuedItems.length} waiting
+              </span>
+            </span>
             {queueExpanded ? (
               <ChevronUp className="h-4 w-4" aria-hidden="true" />
             ) : (
@@ -442,13 +452,13 @@ export function TodaysTop3Card({
         </section>
 
         <div
-          className="border-t border-line pt-4"
+          className="rounded-lg border border-line/50 bg-surface/20 p-3"
           data-testid="brief-suggestions"
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-medium text-ink">Suggested from Brief</p>
             <button
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 text-sm text-muted transition hover:border-cobalt hover:text-ink disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line/70 bg-surface/55 px-3 text-sm text-muted transition hover:border-cobalt hover:bg-cobalt/10 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/45 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={importMutation.isPending}
               onClick={() => importMutation.mutate()}
               type="button"
@@ -485,7 +495,7 @@ export function TodaysTop3Card({
               briefSuggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
-                  className="rounded-md border border-line bg-surface p-3"
+                  className="top3-row top3-row-suggestion rounded-lg border p-3"
                   data-brief-suggestion-id={suggestion.id}
                 >
                   <div className="flex flex-col gap-3">
@@ -515,7 +525,7 @@ export function TodaysTop3Card({
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-mint/40 bg-mint/10 px-3 text-sm text-mint transition hover:bg-mint/15 disabled:opacity-50"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-cobalt/45 bg-cobalt/15 px-3 text-sm font-medium text-ink transition hover:bg-cobalt/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/45 disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={acceptMutation.isPending || ignoreMutation.isPending}
                         onClick={() => acceptMutation.mutate(suggestion.id)}
                         type="button"
@@ -524,7 +534,7 @@ export function TodaysTop3Card({
                         <span>Add to Top 3</span>
                       </button>
                       <button
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line px-3 text-sm text-muted transition hover:border-red-400 hover:text-red-200 disabled:opacity-50"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line/70 bg-surface/25 px-3 text-sm text-muted transition hover:border-danger/55 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/35 disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={acceptMutation.isPending || ignoreMutation.isPending}
                         onClick={() => ignoreMutation.mutate(suggestion.id)}
                         type="button"
@@ -575,11 +585,14 @@ function PriorityItemRow({
   onRemove: () => void;
   onReturn: () => void;
 }) {
+  const rowToneClass = canDrag ? "top3-row-active" : "top3-row-queued";
+  const titleClass = canDrag ? "font-semibold text-ink" : "font-medium text-ink";
+
   return (
     <div
-      className={`rounded-md border bg-surface p-3 transition ${
-        dropTarget ? "border-cobalt ring-1 ring-cobalt/50" : "border-line"
-      } ${dragging ? "opacity-55" : ""}`}
+      className={`top3-row ${rowToneClass} rounded-lg border p-3 transition duration-150 ${
+        dropTarget ? "top3-row-drop" : ""
+      } ${dragging ? "scale-[0.99] opacity-60" : ""}`}
       data-active-priority-id={canDrag ? item.id : undefined}
       data-priority-item-id={item.id}
       data-priority-status={item.status}
@@ -587,7 +600,7 @@ function PriorityItemRow({
       <div className="flex items-start gap-2">
         {canDrag ? (
           <button
-            className="inline-flex h-8 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-muted transition hover:bg-panel hover:text-ink active:cursor-grabbing"
+            className="inline-flex h-8 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-md border border-line/70 bg-surface/55 text-muted transition hover:border-cobalt/60 hover:bg-cobalt/10 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/50 active:cursor-grabbing"
             onKeyDown={onDragKeyDown}
             onPointerCancel={onDragPointerEnd}
             onPointerDown={onDragPointerDown}
@@ -601,7 +614,7 @@ function PriorityItemRow({
           </button>
         ) : null}
         <div className="min-w-0 flex-1">
-          <p className="break-words text-sm font-medium text-ink">{item.title}</p>
+          <p className={`break-words text-sm ${titleClass}`}>{item.title}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {item.project_label ? (
               <Badge tone="neutral">{item.project_label}</Badge>
@@ -612,7 +625,7 @@ function PriorityItemRow({
         <div className="flex shrink-0 flex-wrap justify-end gap-1">
           {!canDrag ? (
             <button
-              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-cobalt/40 px-2 text-xs text-cobalt transition hover:bg-cobalt/10 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-cobalt/35 bg-cobalt/10 px-2 text-xs font-medium text-cobalt transition hover:border-cobalt/60 hover:bg-cobalt/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobalt/45 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={busy || activeFull}
               onClick={onPromote}
               type="button"
@@ -627,7 +640,7 @@ function PriorityItemRow({
             </button>
           ) : null}
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted transition hover:border-mint hover:text-mint disabled:opacity-40"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line/70 bg-surface/35 text-muted transition hover:border-mint/70 hover:bg-mint/10 hover:text-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint/40 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={busy}
             onClick={onComplete}
             type="button"
@@ -637,25 +650,25 @@ function PriorityItemRow({
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted transition hover:border-amber hover:text-amber disabled:opacity-40"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line/70 bg-surface/35 text-muted transition hover:border-amber/70 hover:bg-amber/10 hover:text-amber focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/40 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={busy}
             onClick={onRemove}
             type="button"
             title="Remove from Today"
             aria-label="Remove from Today"
           >
-            <CircleMinus className="h-4 w-4" aria-hidden="true" />
+            <CalendarMinus className="h-4 w-4" aria-hidden="true" />
           </button>
           {item.source_suggestion_key ? (
             <button
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted transition hover:border-cobalt hover:text-cobalt disabled:opacity-40"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line/70 bg-surface/35 text-muted transition hover:border-violet/70 hover:bg-violet/10 hover:text-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet/40 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={busy}
               onClick={onReturn}
               type="button"
               title="Return to Suggestions"
               aria-label="Return to Suggestions"
             >
-              <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              <Undo2 className="h-4 w-4" aria-hidden="true" />
             </button>
           ) : null}
         </div>
