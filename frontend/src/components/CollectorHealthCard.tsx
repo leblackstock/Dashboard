@@ -20,6 +20,16 @@ function statusIcon(status: string) {
   return <Activity className="h-4 w-4 text-cobalt" aria-hidden="true" />;
 }
 
+function statusIconShell(status: string) {
+  if (status === "success") {
+    return "border-mint/40 bg-mint/10";
+  }
+  if (status === "failed") {
+    return "border-amber/40 bg-amber/10";
+  }
+  return "border-cobalt/40 bg-cobalt/10";
+}
+
 function formatDate(value: string | null) {
   if (!value) return "—";
   const date = new Date(value);
@@ -37,27 +47,39 @@ export function CollectorHealthCard({ collectors }: { collectors: CollectorHealt
     <DashboardCard title="Collector Health" eyebrow="Freshness">
       <div className="space-y-3">
         {collectors.length === 0 ? (
-          <p className="text-sm text-muted">No collectors tracked.</p>
+          <p className="dashboard-soft-panel rounded-lg border p-3 text-sm text-muted">
+            No collectors tracked.
+          </p>
         ) : (
           collectors.map((collector) => (
             <div
               key={collector.collector_name}
-              className="rounded-md border border-line bg-surface p-3"
+              className="dashboard-soft-panel rounded-lg border p-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    {statusIcon(collector.latest_status)}
-                    <p className="break-words text-sm font-medium text-ink">{collector.label}</p>
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${statusIconShell(
+                        collector.latest_status
+                      )}`}
+                    >
+                      {statusIcon(collector.latest_status)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold text-ink">
+                        {collector.label}
+                      </p>
+                      <p className="mt-1 text-xs text-muted">
+                        Last success {formatDate(collector.last_success_at)}
+                      </p>
+                      {collector.last_failed_at ? (
+                        <p className="mt-1 text-xs text-amber">
+                          Last failure {formatDate(collector.last_failed_at)}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                  <p className="mt-2 text-xs text-muted">
-                    Last success {formatDate(collector.last_success_at)}
-                  </p>
-                  {collector.last_failed_at ? (
-                    <p className="mt-1 text-xs text-muted">
-                      Last failure {formatDate(collector.last_failed_at)}
-                    </p>
-                  ) : null}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
                   <Badge tone={freshnessTone(collector.freshness)}>
@@ -66,16 +88,16 @@ export function CollectorHealthCard({ collectors }: { collectors: CollectorHealt
                   <Badge tone="neutral">{collector.latest_status}</Badge>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted">
-                <div className="rounded-md border border-line bg-panel/70 p-2">
-                  <p>Records</p>
+              <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-[0.8fr_1.2fr]">
+                <div className="rounded-md border border-line/60 bg-bg/25 p-2.5 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.025)]">
+                  <p className="font-medium">Records</p>
                   <p className="mt-1 text-sm font-semibold text-ink">
                     {collector.records_written}
                   </p>
                 </div>
-                <div className="rounded-md border border-line bg-panel/70 p-2">
-                  <p>Status</p>
-                  <p className="mt-1 truncate text-sm font-semibold text-ink">
+                <div className="rounded-md border border-line/60 bg-bg/25 p-2.5 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.025)]">
+                  <p className="font-medium">Status</p>
+                  <p className="mt-1 break-words text-sm font-semibold text-ink">
                     {collector.safe_message}
                   </p>
                 </div>
